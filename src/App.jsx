@@ -26,6 +26,7 @@ import PayButton from "./PayButton";
 import { updateUserStatus } from "./userService";
 import { useNavigate } from "react-router-dom";
 import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt } from "react-icons/fa";
+
 import Chat from "./Chat";
 import { useRef } from "react";
 import ProfileForm from "./ProfileForm";
