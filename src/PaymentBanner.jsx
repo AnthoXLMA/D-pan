@@ -1,17 +1,9 @@
 import React, { useState } from "react";
-import {
-  createEscrow,
-  releaseEscrow,
-  refundEscrow,
-} from "./services/escrowService.js";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { createEscrow, releaseEscrow, refundEscrow } from "./services/escrowService.js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { ShieldCheck, CreditCard, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "react-toastify";
 
 // Clé publique Stripe
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -20,7 +12,7 @@ if (!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY) {
   console.error("❌ Clé publique Stripe manquante dans .env !");
 }
 
-function StripeCheckout({ clientSecret, setPaymentStatus }) {
+const StripeCheckout = ({ clientSecret, setPaymentStatus, report, setInProgressModal }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [status, setStatus] = useState("");
@@ -41,6 +33,14 @@ function StripeCheckout({ clientSecret, setPaymentStatus }) {
       } else if (result.paymentIntent.status === "requires_capture") {
         setStatus("✅ Paiement bloqué en séquestre !");
         setPaymentStatus("pending");
+
+        // 🔹 Ouvrir le InProgressModal côté solidaire
+        if (setInProgressModal) {
+          setInProgressModal({
+            isOpen: true,
+            report: { id: report.id, ...report }
+          });
+        }
       }
     } catch (err) {
       setStatus("❌ " + err.message);
@@ -66,28 +66,31 @@ function StripeCheckout({ clientSecret, setPaymentStatus }) {
       )}
     </div>
   );
-}
+};
 
-export default function PaymentBanner({ report, solidaire }) {
+
+
+//--------------------PAYMENT BANNER COMPONENT----------------------------------
+
+
+export default function PaymentBanner({ report, solidaire, setInProgressModal }) {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [clientSecret, setClientSecret] = useState(null);
 
   if (!report || !solidaire) return null;
 
-const handleCreateEscrow = async () => {
-  try {
-    const data = await createEscrow(report.id, report.frais);
-    if (data?.clientSecret) setClientSecret(data.clientSecret);
-  } catch (err) {
-    console.error("❌ handleCreateEscrow:", err.message);
-  }
-};
-
+  const handleCreateEscrow = async () => {
+    try {
+      const data = await createEscrow(report.id, report.frais);
+      if (data?.clientSecret) setClientSecret(data.clientSecret);
+    } catch (err) {
+      console.error("❌ handleCreateEscrow:", err.message);
+      toast.error("Impossible de créer le séquestre");
+    }
+  };
 
   return (
-// <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
-// <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white shadow-xl p-4">
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-2xl shadow-xl p-5 border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
@@ -105,8 +108,7 @@ const handleCreateEscrow = async () => {
           🚗 <span className="font-semibold">{solidaire.name}</span> est en route
         </p>
         <p className="text-gray-700 mb-3">
-          💰 Frais :{" "}
-          <span className="font-bold text-blue-600">{report.frais} €</span>
+          💰 Frais : <span className="font-bold text-blue-600">{report.frais} €</span>
         </p>
 
         {/* Étape 1 : Création escrow */}
@@ -120,11 +122,13 @@ const handleCreateEscrow = async () => {
         )}
 
         {/* Étape 2 : Paiement Stripe */}
-        {clientSecret && paymentStatus === "pending" && (
+        {clientSecret && paymentStatus === null && (
           <Elements stripe={stripePromise}>
             <StripeCheckout
               clientSecret={clientSecret}
               setPaymentStatus={setPaymentStatus}
+              report={report}
+              setInProgressModal={setInProgressModal}
             />
           </Elements>
         )}

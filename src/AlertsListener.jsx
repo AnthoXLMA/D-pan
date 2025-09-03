@@ -17,6 +17,8 @@ import { toast } from "react-toastify";
 import { updateUserStatus } from "./userService.js";
 import { createEscrow, releaseEscrow } from "./services/escrowService";
 import HelpBanner from "./HelpBanner.jsx";
+import PaymentBanner from "./PaymentBanner.jsx";
+
 
 export default function AlertsListener({ user, setSelectedAlert }) {
   const [alerts, setAlerts] = useState([]);
@@ -24,6 +26,8 @@ export default function AlertsListener({ user, setSelectedAlert }) {
   const [acceptModal, setAcceptModal] = useState({ isOpen: false, alerte: null });
   const [inProgressModal, setInProgressModal] = useState({ isOpen: false, report: null });
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [alerteActuelle, setAlerteActuelle] = useState(null);
+  const [solidaireActuel, setSolidaireActuel] = useState(null);
 
   // 🔥 Marquer le solidaire en ligne / hors ligne
   useEffect(() => {
@@ -207,6 +211,20 @@ export default function AlertsListener({ user, setSelectedAlert }) {
           solidaire={user}
           onComplete={handleReleasePayment}
         />
+
+        {alerteActuelle && solidaireActuel && (
+          <PaymentBanner
+            report={alerteActuelle}
+            solidaire={solidaireActuel}
+            setInProgressModal={setInProgressModal}
+          />
+        )}
+{/*
+        <PaymentBanner
+          report={report}
+          solidaire={solidaire}
+          setInProgressModal={setInProgressModal}
+        />*/}
 
         <HelpBanner
           report={inProgressModal.report}
