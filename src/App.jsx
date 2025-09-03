@@ -32,7 +32,8 @@ import ProfileForm from "./ProfileForm";
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [currentPosition, setCurrentPosition] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState([43.4923, -1.4746]);
+  //const [currentPosition, setCurrentPosition] = useState(null);
   const [reports, setReports] = useState([]);
   const [solidaires, setSolidaires] = useState([]);
   const [activeReport, setActiveReport] = useState(null);
