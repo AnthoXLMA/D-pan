@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ModalPortal from "./ModalPortal";
+import ModalPortal from "./ModalPortal.jsx";
 import { toast } from "react-toastify";
 import { createEscrow } from "./services/escrowService.js"; // utilise ton service existant
 

@@ -5,13 +5,14 @@ import L from "leaflet";
 import { onSnapshot, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { db } from "./firebase.js";
-import PaymentBanner from "./PaymentBanner";
-import PayButton from "./PayButton";
-import AcceptModal from "./AcceptModal";
-import InProgressModal from "./InProgressModal";
-import { getDistanceKm } from "./utils/distance";
-import ModalHelperList from "./ModalHelperList";
-import { MATERIEL_OPTIONS } from "./constants/materiel";
+import PaymentBanner from "./PaymentBanner.jsx";
+import PayButton from "./PayButton.jsx";
+import AcceptModal from "./AcceptModal.jsx";
+import InProgressModal from "./InProgressModal.jsx";
+import { getDistanceKm } from "./utils/distance.js";
+import ModalHelperList from "./ModalHelperList.jsx";
+import { MATERIEL_OPTIONS } from "./constants/materiel.js";
+
 
 // === Icônes ===
 const currentUserIcon = new L.Icon({

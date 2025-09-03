@@ -11,12 +11,12 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
-import AcceptModal from "./AcceptModal";
-import InProgressModal from "./InProgressModal";
+import AcceptModal from "./AcceptModal.jsx";
+import InProgressModal from "./InProgressModal.jsx";
 import { toast } from "react-toastify";
-import { updateUserStatus } from "./userService";
+import { updateUserStatus } from "./userService.js";
 import { createEscrow, releaseEscrow } from "./services/escrowService";
-import HelpBanner from "./HelpBanner";
+import HelpBanner from "./HelpBanner.jsx";
 
 export default function AlertsListener({ user, setSelectedAlert }) {
   const [alerts, setAlerts] = useState([]);

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import './index.css';
-import Auth from "./Auth";
-import MapView from "./MapView";
-import ReportForm from "./ReportForm";
-import AlertsListener from "./AlertsListener";
+import Auth from "./Auth.jsx";
+import MapView from "./MapView.jsx";
+import ReportForm from "./ReportForm.jsx";
+import AlertsListener from "./AlertsListener.jsx";
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -21,15 +21,13 @@ import {
 } from "firebase/firestore";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useReportsListener from "./useReportsListener";
-import PayButton from "./PayButton";
-import { updateUserStatus } from "./userService";
+import useReportsListener from "./useReportsListener.jsx";
+import PayButton from "./PayButton.jsx";
+import { updateUserStatus } from "./userService.js";
 import { useNavigate } from "react-router-dom";
 import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt } from "react-icons/fa";
-
-import Chat from "./Chat";
-import { useRef } from "react";
-import ProfileForm from "./ProfileForm";
+import Chat from "./Chat.jsx";
+import ProfileForm from "./ProfileForm.jsx";
 
 
 export default function App() {

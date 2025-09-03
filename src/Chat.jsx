@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { collection, query, where, orderBy, addDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "./firebase.js";
 
 export default function Chat({ report, user }) {
   const [messages, setMessages] = useState([]);
