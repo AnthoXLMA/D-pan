@@ -29,6 +29,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 /**
  * 1️⃣ Créer un paiement (escrow)
  */
@@ -61,6 +62,7 @@ app.post("/create-payment", async (req, res) => {
  */
 app.post("/release-payment", async (req, res) => {
   const { reportId, paymentIntentId } = req.body;
+  if (!paymentIntentId) throw new Error("PaymentIntent ID manquant");
   try {
     console.log(`➡️ Capture PaymentIntent ${paymentIntentId}`);
 
