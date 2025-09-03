@@ -1,3 +1,4 @@
+// src/AlertsListener.jsx
 import React, { useEffect, useState } from "react";
 import {
   collection,
@@ -7,7 +8,6 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  addDoc,
   getDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -25,7 +25,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
   const [inProgressModal, setInProgressModal] = useState({ isOpen: false, report: null });
   const [paymentStatus, setPaymentStatus] = useState(null);
 
-  // 🔥 Marquer le solidaire en ligne
+  // 🔥 Marquer le solidaire en ligne / hors ligne
   useEffect(() => {
     if (!user) return;
     const userRef = doc(db, "solidaires", user.uid);
@@ -33,7 +33,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
     return () => updateDoc(userRef, { status: "indisponible" }).catch(console.error);
   }, [user]);
 
-  // 🔔 Écoute des alertes
+  // 🔔 Écoute des alertes reçues
   useEffect(() => {
     if (!user) return;
     const q = query(collection(db, "alertes"), where("toUid", "==", user.uid));
@@ -42,12 +42,34 @@ export default function AlertsListener({ user, setSelectedAlert }) {
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
 
-      const initialized = sorted.map(a => ({ ...a, status: a.status || "en attente" }));
+      const initialized = sorted.map((a) => ({ ...a, status: a.status || "en attente" }));
       setAlerts(initialized);
 
       const newStatus = initialized.length > 0 ? "en attente de réponse" : "disponible";
       updateDoc(doc(db, "solidaires", user.uid), { status: newStatus }).catch(console.error);
     });
+    return () => unsub();
+  }, [user]);
+
+  // 🔔 Écoute des reports liés au solidaire (paiements Stripe)
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, "reports"), where("solidaireId", "==", user.uid));
+    const unsub = onSnapshot(q, (snapshot) => {
+      snapshot.docs.forEach((docSnap) => {
+        const report = { id: docSnap.id, ...docSnap.data() };
+
+        if (report.escrowStatus === "created") {
+          setInProgressModal({ isOpen: true, report });
+        }
+
+        if (["released", "refunded"].includes(report.escrowStatus)) {
+          setInProgressModal({ isOpen: false, report: null });
+        }
+      });
+    });
+
     return () => unsub();
   }, [user]);
 
@@ -97,7 +119,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
     }
   };
 
-  // 🔑 Solidaire valide les frais
+  // 🔑 Solidaire valide les frais et déclenche le séquestre
   const handleConfirmPricing = async (alerte, montant, fraisAnnules) => {
     if (!alerte?.reportId) return;
 
@@ -125,7 +147,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
       await updateUserStatus(user.uid, "aide en cours", true, alerte.reportId);
 
-      // Crée le séquestre
+      // Crée le séquestre Stripe
       const escrowResult = await createEscrow(alerte.reportId, finalAmount, setPaymentStatus);
 
       if (!escrowResult.success) {
@@ -133,13 +155,12 @@ export default function AlertsListener({ user, setSelectedAlert }) {
         return;
       }
 
-      // Si montant 0 ou séquestre créé → ouvrir InProgress
+      // Si montant 0 ou séquestre déjà créé → ouvrir InProgress
       if (escrowResult.status === "created" || finalAmount === 0) {
         setAcceptModal({ isOpen: false, alerte: null });
         setInProgressModal({ isOpen: true, report: { id: alerte.reportId, ...reportData } });
         toast.success("💰 Montant séquestré ! Vous pouvez aller aider le sinistré.");
       } else {
-        // Sinon on garde AcceptModal ouverte jusqu'au paiement réel
         toast.info("Le sinistré doit maintenant séquestrer le montant.");
       }
     } catch (err) {
@@ -148,32 +169,6 @@ export default function AlertsListener({ user, setSelectedAlert }) {
     }
   };
 
-  // 🔔 Écoute reports pour InProgressModal
-  useEffect(() => {
-    if (!user) return;
-
-    const q = query(collection(db, "reports"), where("helperUid", "==", user.uid));
-    const unsub = onSnapshot(q, (snapshot) => {
-      snapshot.docs.forEach((docSnap) => {
-        const report = { id: docSnap.id, ...docSnap.data() };
-
-        // Montant séquestré via Stripe
-        if ((report.escrowStatus === "created" || report.frais === 0) && !inProgressModal.isOpen) {
-          setAcceptModal({ isOpen: false, alerte: null });
-          setInProgressModal({ isOpen: true, report });
-          toast.success("💰 Montant séquestré ! Vous pouvez aller aider le sinistré.");
-        }
-
-        // Alerte rejetée
-        if (report.status === "aide refusée" && report.alertId) {
-          removeAlertWithAnimation(report.alertId);
-        }
-      });
-    });
-
-    return () => unsub();
-  }, [user, inProgressModal.isOpen]);
-
   const handleReleasePayment = async (reportId) => {
     await releaseEscrow(reportId, setPaymentStatus);
     setInProgressModal({ isOpen: false, report: null });
@@ -181,9 +176,12 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
   const statusColor = (status) => {
     switch (status) {
-      case "accepté": return "#d1e7dd";
-      case "refusé": return "#f8d7da";
-      default: return "#fff3cd";
+      case "accepté":
+        return "#d1e7dd";
+      case "refusé":
+        return "#f8d7da";
+      default:
+        return "#fff3cd";
     }
   };
 
@@ -217,7 +215,11 @@ export default function AlertsListener({ user, setSelectedAlert }) {
         ) : (
           <ul className="space-y-3">
             {alerts.map((a) => (
-              <li key={a.id} className="p-3 rounded-lg shadow-sm" style={{ backgroundColor: statusColor(a.status) }}>
+              <li
+                key={a.id}
+                className="p-3 rounded-lg shadow-sm"
+                style={{ backgroundColor: statusColor(a.status) }}
+              >
                 <h5 className="font-medium">
                   🚨 {a.ownerName || a.fromUid} a signalé : {a.nature || "Panne"}
                 </h5>

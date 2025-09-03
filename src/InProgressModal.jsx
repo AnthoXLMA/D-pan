@@ -52,6 +52,18 @@ export default function InProgressModal({
     }
   };
 
+//   const handleComplete = async () => {
+//   setLoading(true);
+//   const res = await releaseEscrow(report.id, report.paymentIntentId);
+//   if (res.success) {
+//     toast.success("💸 Paiement libéré !");
+//   } else {
+//     toast.error(res.error);
+//   }
+//   setLoading(false);
+// };
+
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-11/12 animate-fade-in relative">
