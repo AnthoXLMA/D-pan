@@ -85,7 +85,8 @@ const handleCreateEscrow = async () => {
 
 
   return (
-    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+// <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+      <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white shadow-xl p-4">
       <div className="bg-white rounded-2xl shadow-xl p-5 border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
