@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import HelpModal from "./HelpModal";
+import HelpModal from "./HelpModal.js";
 
 export default function SolidarComponent({ distance, tarifKm }) {
   const [isModalOpen, setModalOpen] = useState(false);
