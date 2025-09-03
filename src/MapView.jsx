@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { onSnapshot, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { db } from "./firebase";
+import { db } from "./firebase.js";
 import PaymentBanner from "./PaymentBanner";
 import PayButton from "./PayButton";
 import AcceptModal from "./AcceptModal";

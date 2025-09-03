@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { releaseEscrow, refundEscrow } from "./services/escrowService";
+import { releaseEscrow, refundEscrow } from "./services/escrowService.js";
 
 export default function ActiveRepairModal({ report, solidaire, userPosition, onComplete }) {
   const [distance, setDistance] = useState(null);

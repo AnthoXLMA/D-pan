@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   db,
-} from "./firebase";
+} from "./firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import {
   TextField,

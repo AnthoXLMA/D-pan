@@ -4,7 +4,7 @@ import Auth from "./Auth";
 import MapView from "./MapView";
 import ReportForm from "./ReportForm";
 import AlertsListener from "./AlertsListener";
-import { auth, db } from "./firebase";
+import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection,

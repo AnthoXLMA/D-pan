@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "./firebase.js";
 import { toast } from "react-toastify";
 
 export default function useReportsListener(user) {

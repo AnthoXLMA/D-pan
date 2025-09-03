@@ -1,6 +1,6 @@
 // src/components/InProgressModal.jsx
 import React, { useState, useEffect } from "react";
-import { releaseEscrow } from "./services/escrowService";
+import { releaseEscrow } from "./services/escrowService.js";
 import { toast } from "react-toastify";
 
 export default function InProgressModal({
