@@ -3,7 +3,10 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import admin from "firebase-admin";  // 🔹 Firebase admin
-import serviceAccount from "./serviceAccountKey.json" assert { type: "json" };
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const serviceAccount = require("./serviceAccountKey.json"); // ✅ CommonJS-style
+
 import { createPaymentIntent, capturePaymentIntent, refundPaymentIntent } from "./stripeService.js";
 
 // ⚡ Pour être sûr que Firebase détecte le project_id
