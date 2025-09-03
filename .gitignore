@@ -23,3 +23,19 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+# Node modules
+backend/node_modules
+node_modules
+
+# Build / production
+backend/build
+build
+
+# Firebase keys
+backend/serviceAccountKey.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
