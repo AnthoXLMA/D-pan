@@ -1,6 +1,6 @@
 // src/SendMessageTest.jsx
 import React, { useState } from "react";
-import { auth, db } from "./firebase";
+import { auth, db } from "./firebase.js";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function SendMessageTest() {

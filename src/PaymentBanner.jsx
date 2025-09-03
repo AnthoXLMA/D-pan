@@ -3,7 +3,7 @@ import {
   createEscrow,
   releaseEscrow,
   refundEscrow,
-} from "./services/escrowService";
+} from "./services/escrowService.js";
 import {
   Elements,
   CardElement,

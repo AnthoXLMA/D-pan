@@ -3,12 +3,16 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import admin from "firebase-admin";  // 🔹 Firebase admin
+import serviceAccount from "./serviceAccountKey.json" assert { type: "json" };
 import { createPaymentIntent, capturePaymentIntent, refundPaymentIntent } from "./stripeService.js";
 
-// Initialisation Firebase Admin (si pas déjà fait ailleurs)
+// ⚡ Pour être sûr que Firebase détecte le project_id
+process.env.GOOGLE_APPLICATION_CREDENTIALS = "./serviceAccountKey.json";
+
+// Initialisation Firebase Admin
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+    credential: admin.credential.cert(serviceAccount),
   });
 }
 
@@ -26,19 +30,17 @@ app.use((req, res, next) => {
  * 1️⃣ Créer un paiement (escrow)
  */
 app.post("/create-payment", async (req, res) => {
-  const { reportId, amount } = req.body; // ✅ récupère bien reportId et amount
+  const { reportId, amount } = req.body;
   try {
     console.log(`➡️ Création PaymentIntent pour report ${reportId}, montant: ${amount}`);
 
     const paymentIntent = await createPaymentIntent(amount);
     console.log("✅ PaymentIntent créé :", paymentIntent.id, "statut:", paymentIntent.status);
 
-    // 🔹 Met à jour Firestore avec l'état du séquestre
     await admin.firestore().collection("reports").doc(reportId).update({
       escrowStatus: "created",
-      status: "séquestre confirmé",
+      status: "created",
       paymentIntentId: paymentIntent.id,
-      status :"created"
     });
 
     res.json({
@@ -55,14 +57,13 @@ app.post("/create-payment", async (req, res) => {
  * 2️⃣ Libérer le paiement (capture)
  */
 app.post("/release-payment", async (req, res) => {
-  const { reportId, paymentIntentId } = req.body; // ✅ on passe aussi reportId
+  const { reportId, paymentIntentId } = req.body;
   try {
     console.log(`➡️ Capture PaymentIntent ${paymentIntentId}`);
 
     const paymentIntent = await capturePaymentIntent(paymentIntentId);
     console.log("✅ Paiement capturé :", paymentIntent.id, "statut:", paymentIntent.status);
 
-    // 🔹 Met à jour Firestore après capture
     await admin.firestore().collection("reports").doc(reportId).update({
       escrowStatus: "released",
       status: "terminé",
@@ -85,7 +86,6 @@ app.post("/refund-payment", async (req, res) => {
     const refund = await refundPaymentIntent(paymentIntentId);
     console.log("✅ Paiement remboursé :", refund.id);
 
-    // 🔹 Met à jour Firestore après refund
     await admin.firestore().collection("reports").doc(reportId).update({
       escrowStatus: "refunded",
       status: "remboursé",

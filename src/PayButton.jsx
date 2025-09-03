@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ModalPortal from "./ModalPortal";
 import { toast } from "react-toastify";
-import { createEscrow } from "./services/escrowService"; // utilise ton service existant
+import { createEscrow } from "./services/escrowService.js"; // utilise ton service existant
 
 export default function PayButton({ report }) {
   const [showModal, setShowModal] = useState(false);
