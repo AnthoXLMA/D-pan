@@ -25,10 +25,12 @@ import useReportsListener from "./useReportsListener";
 import PayButton from "./PayButton";
 import { updateUserStatus } from "./userService";
 import { useNavigate } from "react-router-dom";
-import { FaGlobe, FaCommentDots, FaBook } from "react-icons/fa";
+import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt } from "react-icons/fa";
+
 import Chat from "./Chat";
 import { useRef } from "react";
 import ProfileForm from "./ProfileForm";
+
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +41,7 @@ export default function App() {
   const [activeReport, setActiveReport] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [showPanneModal, setShowPanneModal] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState(0);
@@ -47,6 +50,8 @@ export default function App() {
   const mapRef = useRef(null);
   const [isAcceptOpen, setIsAcceptOpen] = useState(false);
   const [isInProgressOpen, setIsInProgressOpen] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [showAlertHistory, setShowAlertHistory] = useState(false);
   const [showHelperList, setShowHelperList] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileForm, setShowProfileForm] = useState(false);
@@ -477,77 +482,63 @@ export default function App() {
 
 
 {/* Menu flottant style Instagram avec bouton + centré responsive */}
-<div className="fixed bottom-0 left-0 w-full bg-white shadow-t py-4 sm:py-5 md:py-6 flex justify-between items-center z-50">
-  {/* Gauche du menu */}
-  <div className="flex items-center space-x-4 ml-4">
-    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-      ⚡ {reports.length}
-    </span>
-    <button
-      onClick={() => mapRef.current?.recenter()}
-      className="flex flex-col items-center justify-center"
-    >
-      <FaGlobe size={24} />
-    </button>
-  </div>
+      {/* Menu flottant */}
+      <div className="fixed bottom-0 left-0 w-full bg-white shadow-t z-50">
+        <div className="relative flex justify-between items-center px-4 py-3 max-w-screen-lg mx-auto">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowPanneModal(true)}
+              className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium flex items-center"
+            >
+              ⚡ {userReports.length}
+            </button>
+            <button onClick={() => setPage("dashboard")} className="flex flex-col items-center text-center">
+              <FaTachometerAlt size={24} />
+              <span className="text-xs mt-1">Dashboard</span>
+            </button>
+            <button
+              onClick={() => { if (page !== "map") setPage("map"); else mapRef.current?.recenter?.(); }}
+              className="flex flex-col items-center text-center"
+            >
+              <FaMapMarkedAlt size={24} />
+              <span className="text-xs mt-1">Carte</span>
+            </button>
+          </div>
 
-  {/* Centre : bouton + */}
-  <div className="absolute left-1/2 transform -translate-x-1/2 -top-10 sm:-top-12 md:-top-14 z-50">
-    <button
-      onClick={() => setShowReportForm(true)}
-      className="w-16 sm:w-18 md:w-20 h-16 sm:h-18 md:h-20 bg-blue-600 hover:bg-blue-700
-                 rounded-full shadow-2xl flex items-center justify-center
-                 text-white text-4xl sm:text-5xl md:text-6xl font-bold border-4 border-white
-                 leading-none text-center
-                 transition-transform hover:scale-110"
-    >
-      +
-    </button>
-  </div>
+          <div className="flex items-center space-x-4">
+            <button onClick={() => setShowChat(true)} className="flex flex-col items-center text-center">
+              <FaCommentDots size={24} />
+              <span className="text-xs mt-1">Chat</span>
+            </button>
 
-  {/* Droite du menu */}
-  <div className="flex items-center space-x-4 mr-4">
-    {/* Chat */}
-    <button
-      onClick={() => {
-        if (activeReport?.helperConfirmed) {
-          navigateTo("chat");
-        } else {
-          toast.info(
-            "💬 Vous pouvez initier une nouvelle panne ou contacter un solidaire en cliquant ici."
-          );
-        }
-      }}
-      className="flex flex-col items-center relative"
-    >
-      <FaCommentDots size={24} />
-      {unreadMessages > 0 && activeReport?.helperConfirmed && (
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 rounded-full">
-          {unreadMessages}
-        </span>
-      )}
-    </button>
+            <button onClick={() => setShowAlertHistory(true)} className="flex flex-col items-center text-center relative">
+              <FaBook size={24} />
+              <span className="text-xs mt-1">Feed</span>
+              {alerts.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full flex items-center justify-center animate-pulse">
+                  {alerts.length}
+                </span>
+              )}
+            </button>
 
-    {/* Feed */}
-    <button
-      onClick={() => navigateTo("feed")}
-      className="flex flex-col items-center"
-    >
-      <FaBook size={24} />
-    </button>
+            <button onClick={() => setShowHelperList(true)} className="flex flex-col items-center justify-center relative text-center">
+              👥
+              <span className="absolute -top-2 -right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                {onlineUsers}
+              </span>
+              <span className="text-xs mt-1">En ligne</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-    {/* Icône utilisateurs */}
-    <button
-      onClick={() => setShowHelperList(true)}
-      className="flex flex-col items-center relative"
-    >
-      👥
-      <span className="absolute -top-2 -right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-        {onlineUsers}
-      </span>
-    </button>
-  </div>
-</div>
+      {/* Bouton + */}
+      <div className="fixed bottom-20 right-4 z-50">
+        <button
+          onClick={() => setShowReportForm(true)}
+          className="w-16 h-16 bg-blue-600 hover:bg-blue-700 rounded-full shadow-2xl flex items-center justify-center text-white text-4xl font-bold border-4 border-white transition-transform hover:scale-110"
+        >+</button>
+      </div>
 
   {/* Bottom sheet : Report Form */}
   {showReportForm && (
