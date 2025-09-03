@@ -34,25 +34,20 @@ export const createEscrow = async (reportId, amount) => {
 /**
  * 2️⃣ Libérer le paiement (capturer le séquestre)
  */
-export const releaseEscrow = async (reportId, paymentIntentId) => {
+export const releaseEscrow = async (paymentIntentId, setPaymentStatus) => {
   try {
     const res = await fetch(`${API_URL}/release-payment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reportId, paymentIntentId }),
+      body: JSON.stringify({ paymentIntentId }),
     });
-
-    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
-
     const data = await res.json();
-
-    console.log("💸 Paiement libéré pour report:", reportId);
-    return { success: true, ...data };
+    if (data.success) setPaymentStatus("released");
   } catch (err) {
     console.error("❌ releaseEscrow:", err.message);
-    return { success: false, error: err.message };
   }
 };
+
 
 /**
  * 3️⃣ Rembourser le paiement (si annulé)
@@ -62,7 +57,7 @@ export const refundEscrow = async (reportId, paymentIntentId) => {
     const res = await fetch(`${API_URL}/refund-payment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reportId, paymentIntentId }),
+      body: JSON.stringify({ paymentIntentId }),
     });
 
     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
