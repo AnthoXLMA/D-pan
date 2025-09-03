@@ -37,7 +37,8 @@ app.post("/create-payment", async (req, res) => {
     await admin.firestore().collection("reports").doc(reportId).update({
       escrowStatus: "created",
       status: "séquestre confirmé",
-      paymentIntentId: paymentIntent.id, // 🔹 on garde la trace
+      paymentIntentId: paymentIntent.id,
+      status :"created"
     });
 
     res.json({

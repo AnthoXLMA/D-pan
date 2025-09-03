@@ -121,53 +121,56 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
   // 🔑 Solidaire valide les frais et déclenche le séquestre
   const handleConfirmPricing = async (alerte, montant, fraisAnnules) => {
-    if (!alerte?.reportId) return;
+  if (!alerte?.reportId) return;
 
-    try {
-      const reportRef = doc(db, "reports", alerte.reportId);
-      const reportSnap = await getDoc(reportRef);
-      if (!reportSnap.exists()) {
-        await deleteDoc(doc(db, "alertes", alerte.id));
-        removeAlertWithAnimation(alerte.id);
-        setAcceptModal({ isOpen: false, alerte: null });
-        toast.error("⚠️ Rapport introuvable. Alerte supprimée.");
-        return;
-      }
+  try {
+    const reportRef = doc(db, "reports", alerte.reportId);
+    const reportSnap = await getDoc(reportRef);
 
-      const reportData = reportSnap.data();
-      const finalAmount = fraisAnnules ? 0 : montant;
-
-      await updateDoc(reportRef, {
-        status: "attente séquestre",
-        helperUid: user.uid,
-        helperConfirmed: true,
-        frais: finalAmount,
-        notificationForOwner: `🚨 Solidaire en route ! Montant : ${finalAmount} €`,
-      });
-
-      await updateUserStatus(user.uid, "aide en cours", true, alerte.reportId);
-
-      // Crée le séquestre Stripe
-      const escrowResult = await createEscrow(alerte.reportId, finalAmount, setPaymentStatus);
-
-      if (!escrowResult.success) {
-        toast.error("⚠️ Impossible de créer le paiement. Réessayez plus tard.");
-        return;
-      }
-
-      // Si montant 0 ou séquestre déjà créé → ouvrir InProgress
-      if (escrowResult.status === "created" || finalAmount === 0) {
-        setAcceptModal({ isOpen: false, alerte: null });
-        setInProgressModal({ isOpen: true, report: { id: alerte.reportId, ...reportData } });
-        toast.success("💰 Montant séquestré ! Vous pouvez aller aider le sinistré.");
-      } else {
-        toast.info("Le sinistré doit maintenant séquestrer le montant.");
-      }
-    } catch (err) {
-      console.error("Erreur confirmation frais :", err);
-      toast.error("❌ Erreur lors de la validation des frais.");
+    if (!reportSnap.exists()) {
+      await deleteDoc(doc(db, "alertes", alerte.id));
+      removeAlertWithAnimation(alerte.id);
+      setAcceptModal({ isOpen: false, alerte: null });
+      toast.error("⚠️ Rapport introuvable. Alerte supprimée.");
+      return;
     }
-  };
+
+    const reportData = reportSnap.data();
+    const finalAmount = fraisAnnules ? 0 : montant;
+
+    await updateDoc(reportRef, {
+      status: "attente séquestre",
+      helperUid: user.uid,
+      helperConfirmed: true,
+      frais: finalAmount,
+      notificationForOwner: `🚨 Solidaire en route ! Montant : ${finalAmount} €`,
+    });
+
+    await updateUserStatus(user.uid, "aide en cours", true, alerte.reportId);
+
+    // Crée le séquestre Stripe
+    const escrowResult = await createEscrow(alerte.reportId, finalAmount, setPaymentStatus);
+
+    if (!escrowResult.success) {
+      toast.error("⚠️ Impossible de créer le paiement. Réessayez plus tard.");
+      return;
+    }
+
+    // Affiche le modal InProgress pour le solidaire si séquestre créé ou montant 0
+    if (escrowResult.status === "created" || finalAmount === 0) {
+      setAcceptModal({ isOpen: false, alerte: null });
+      setInProgressModal({ isOpen: true, report: { id: alerte.reportId, ...reportData } });
+      toast.success("💰 Montant séquestré ! Vous pouvez aller aider le sinistré.");
+    } else {
+      toast.info("Le sinistré doit maintenant séquestrer le montant.");
+    }
+
+  } catch (err) {
+    console.error("Erreur confirmation frais :", err);
+    toast.error("❌ Erreur lors de la validation des frais.");
+  }
+};
+
 
   const handleReleasePayment = async (reportId) => {
     await releaseEscrow(reportId, setPaymentStatus);
