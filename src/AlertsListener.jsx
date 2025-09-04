@@ -66,17 +66,28 @@ export default function AlertsListener({ user, setSelectedAlert }) {
         const report = { id: docSnap.id, ...docSnap.data() };
 
         if (report.escrowStatus === "created") {
+          // Paiement bloqué / séquestré
           setInProgressModal({ isOpen: true, report });
+          setAlerteActuelle(null);
         }
 
-        if (["released", "refunded"].includes(report.escrowStatus)) {
+        if (report.escrowStatus === "released") {
+          // Paiement capturé → ouverture ActiveRepairModal
           setInProgressModal({ isOpen: false, report: null });
+          setAlerteActuelle(report);
+        }
+
+        if (report.escrowStatus === "refunded") {
+          // Paiement annulé
+          setInProgressModal({ isOpen: false, report: null });
+          setAlerteActuelle(null);
         }
       });
     });
 
     return () => unsub();
   }, [user]);
+
 
   const removeAlertWithAnimation = (id) => {
     setRemovingIds((prev) => [...prev, id]);
@@ -238,15 +249,17 @@ const handleReleasePayment = async (report) => {
             setInProgressModal={setInProgressModal}
           />
         )}
-        {inProgressModal.isOpen && inProgressModal.report && (
-        <ActiveRepairModal
-          report={inProgressModal.report}
-          solidaire={user}               // le solidaire actuel
-          userPosition={user.position}   // sa position si tu la gères
-          onComplete={handleReleasePayment} // fonction à appeler quand le dépannage est terminé
-        />
-      )}
-
+        {alerteActuelle && (
+          <ActiveRepairModal
+            report={alerteActuelle}
+            solidaire={user}
+            userPosition={user.position}
+            onComplete={(reportId) => {
+              handleReleasePayment({ id: reportId });
+              setAlerteActuelle(null); // ferme le modal après le dépannage
+            }}
+          />
+        )}
 {/*
         <PaymentBanner
           report={report}
