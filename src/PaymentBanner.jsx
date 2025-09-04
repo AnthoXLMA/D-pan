@@ -68,11 +68,7 @@ const StripeCheckout = ({ clientSecret, setPaymentStatus, report, setInProgressM
   );
 };
 
-
-
 //--------------------PAYMENT BANNER COMPONENT----------------------------------
-
-
 export default function PaymentBanner({ report, solidaire, setInProgressModal }) {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [clientSecret, setClientSecret] = useState(null);
