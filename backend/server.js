@@ -61,14 +61,24 @@ app.post("/create-payment", async (req, res) => {
  * 2️⃣ Libérer le paiement (capture)
  */
 app.post("/release-payment", async (req, res) => {
-  const { reportId, paymentIntentId } = req.body;
-  if (!paymentIntentId) throw new Error("PaymentIntent ID manquant");
+  const { reportId } = req.body; // <-- on ne dépend plus du frontend pour l'ID Stripe
+
   try {
+    // 1️⃣ Récupérer le report
+    const reportDoc = await admin.firestore().collection("reports").doc(reportId).get();
+    if (!reportDoc.exists) throw new Error("Report non trouvé");
+
+    const report = reportDoc.data();
+    const paymentIntentId = report.paymentIntentId;
+    if (!paymentIntentId) throw new Error("PaymentIntent ID manquant dans le report");
+
     console.log(`➡️ Capture PaymentIntent ${paymentIntentId}`);
 
+    // 2️⃣ Capturer le paiement
     const paymentIntent = await capturePaymentIntent(paymentIntentId);
     console.log("✅ Paiement capturé :", paymentIntent.id, "statut:", paymentIntent.status);
 
+    // 3️⃣ Mettre à jour le report
     await admin.firestore().collection("reports").doc(reportId).update({
       escrowStatus: "released",
       status: "terminé",
@@ -80,6 +90,7 @@ app.post("/release-payment", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 /**
  * 3️⃣ Rembourser (refund)
