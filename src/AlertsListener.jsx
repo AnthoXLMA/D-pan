@@ -60,13 +60,15 @@ export default function AlertsListener({ user, setSelectedAlert }) {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, "reports"), where("solidaireId", "==", user.uid));
+    const q = query(collection(db, "reports"), where("helperUid", "==", user.uid));
     const unsub = onSnapshot(q, (snapshot) => {
       snapshot.docs.forEach((docSnap) => {
         const report = { id: docSnap.id, ...docSnap.data() };
+        console.log("🔥 Report update:", report.id, report.escrowStatus);
 
         if (report.escrowStatus === "created") {
           // Paiement bloqué / séquestré
+          console.log("🚀 Escrow capté par solidaire :", report);
           setInProgressModal({ isOpen: true, report });
           setAlerteActuelle(null);
         }
