@@ -18,6 +18,7 @@ import { updateUserStatus } from "./userService.js";
 import { createEscrow, releaseEscrow } from "./services/escrowService";
 import HelpBanner from "./HelpBanner.jsx";
 import PaymentBanner from "./PaymentBanner.jsx";
+import ActiveRepairModal from "./ActiveRepairModal.jsx";
 
 
 export default function AlertsListener({ user, setSelectedAlert }) {
@@ -237,6 +238,15 @@ const handleReleasePayment = async (report) => {
             setInProgressModal={setInProgressModal}
           />
         )}
+        {inProgressModal.isOpen && inProgressModal.report && (
+        <ActiveRepairModal
+          report={inProgressModal.report}
+          solidaire={user}               // le solidaire actuel
+          userPosition={user.position}   // sa position si tu la gères
+          onComplete={handleReleasePayment} // fonction à appeler quand le dépannage est terminé
+        />
+      )}
+
 {/*
         <PaymentBanner
           report={report}
