@@ -48,6 +48,8 @@ export const releaseEscrow = async (reportId, setPaymentStatus) => {
 
   const data = await res.json();
   if (data.success) setPaymentStatus("released");
+
+  return data;
 };
 
 
