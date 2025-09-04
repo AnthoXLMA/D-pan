@@ -28,7 +28,7 @@ export const createEscrow = async (reportId, amount) => {
     console.log("✅ Escrow créé pour report:", reportId, data);
 
     await updateDoc(doc(db, "reports", reportId), { escrowStatus: "created", paymentIntentId: data.paymentIntentId });
-
+    console.log("🔥 Firestore mis à jour :", reportId, "→ created");
     return { success: true, ...data, status: "created" };
   } catch (err) {
     console.error("❌ createEscrow:", err.message);

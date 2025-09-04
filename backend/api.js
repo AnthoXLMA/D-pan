@@ -6,7 +6,7 @@
 // app.use(bodyParser.json());
 
 // // Créer un paiement
-// app.post("/api/create-payment", async (req, res) => {
+// app.post("/create-payment", async (req, res) => {
 //   const { reportId, amount } = req.body;
 //   try {
 //     const clientSecret = await createPaymentIntent(reportId, amount);
@@ -18,7 +18,7 @@
 // });
 
 // // Capturer paiement
-// app.post("/api/capture-payment", async (req, res) => {
+// app.post("/capture-payment", async (req, res) => {
 //   const { paymentIntentId } = req.body;
 //   try {
 //     const result = await capturePayment(paymentIntentId);
@@ -29,7 +29,7 @@
 // });
 
 // // Rembourser paiement
-// app.post("/api/refund-payment", async (req, res) => {
+// app.post("/refund-payment", async (req, res) => {
 //   const { paymentIntentId } = req.body;
 //   try {
 //     const result = await refundPayment(paymentIntentId);
