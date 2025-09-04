@@ -1,4 +1,7 @@
 // src/services/escrowService.js
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase.js"; // adapte le chemin selon ton projet
+
 
 const API_URL = "http://localhost:4242";
 
@@ -22,9 +25,11 @@ export const createEscrow = async (reportId, amount) => {
     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
 
     const data = await res.json();
-
     console.log("✅ Escrow créé pour report:", reportId, data);
-    return { success: true, ...data, status: "pending" }; // contient clientSecret + paymentIntentId
+
+    await updateDoc(doc(db, "reports", reportId), { escrowStatus: "created", paymentIntentId: data.paymentIntentId });
+
+    return { success: true, ...data, status: "created" };
   } catch (err) {
     console.error("❌ createEscrow:", err.message);
     return { success: false, error: err.message };
