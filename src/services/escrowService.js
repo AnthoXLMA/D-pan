@@ -35,39 +35,35 @@ export const createEscrow = async (reportId, amount) => {
  * 2️⃣ Libérer le paiement (capturer le séquestre)
  */
 export const releaseEscrow = async (paymentIntentId, setPaymentStatus) => {
-  try {
-    const res = await fetch(`${API_URL}/release-payment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentIntentId }),
-    });
-    const data = await res.json();
-    if (data.success) setPaymentStatus("released");
-  } catch (err) {
-    console.error("❌ releaseEscrow:", err.message);
+  if (!paymentIntentId) {
+    console.error("❌ releaseEscrow: paymentIntentId manquant !");
+    return;
   }
+
+  const res = await fetch(`${API_URL}/release-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paymentIntentId }),
+  });
+  const data = await res.json();
+  if (data.success) setPaymentStatus("released");
 };
+
 
 
 /**
  * 3️⃣ Rembourser le paiement (si annulé)
  */
-export const refundEscrow = async (reportId, paymentIntentId) => {
-  try {
-    const res = await fetch(`${API_URL}/refund-payment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentIntentId }),
-    });
+export const refundEscrow = async (paymentIntentId, setPaymentStatus) => {
+  if (!paymentIntentId) return;
 
-    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+  const res = await fetch(`${API_URL}/refund-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paymentIntentId }),
+  });
 
-    const data = await res.json();
-
-    console.log("🔄 Paiement remboursé pour report:", reportId);
-    return { success: true, ...data };
-  } catch (err) {
-    console.error("❌ refundEscrow:", err.message);
-    return { success: false, error: err.message };
-  }
+  const data = await res.json();
+  if (data.success && setPaymentStatus) setPaymentStatus("refunded");
 };
+

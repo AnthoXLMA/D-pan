@@ -176,21 +176,18 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 };
 
 
-  const handleReleasePayment = async (report) => {
+// Exemple AlertsListener.jsx
+const handleReleasePayment = async (report) => {
   if (!report?.paymentIntentId) {
     toast.error("❌ PaymentIntent ID manquant !");
     return;
   }
 
-  try {
-    await releaseEscrow(report.id, report.paymentIntentId, setPaymentStatus);
-    setInProgressModal({ isOpen: false, report: null });
-    toast.success("✅ Paiement libéré !");
-  } catch (err) {
-    console.error("Erreur releasePayment:", err);
-    toast.error("❌ Impossible de libérer le paiement.");
-  }
+  await releaseEscrow(report.paymentIntentId, setPaymentStatus);
+  setInProgressModal({ isOpen: false, report: null });
+  toast.success("✅ Paiement libéré !");
 };
+
 
   const statusColor = (status) => {
     switch (status) {
