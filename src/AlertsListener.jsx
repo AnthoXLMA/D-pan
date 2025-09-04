@@ -64,23 +64,25 @@ export default function AlertsListener({ user, setSelectedAlert }) {
     const unsub = onSnapshot(q, (snapshot) => {
       snapshot.docs.forEach((docSnap) => {
         const report = { id: docSnap.id, ...docSnap.data() };
-        console.log("🔥 Report update:", report.id, report.escrowStatus);
+        console.log("🔥 Report update:", report.id, "escrowStatus:", report.escrowStatus, "user:", user?.uid);
 
         if (report.escrowStatus === "created") {
           // Paiement bloqué / séquestré
-          console.log("🚀 Escrow capté par solidaire :", report);
+          console.log("💰 Séquestre créé → ouverture InProgressModal", report);
           setInProgressModal({ isOpen: true, report });
           setAlerteActuelle(null);
         }
 
         if (report.escrowStatus === "released") {
           // Paiement capturé → ouverture ActiveRepairModal
+          console.log("💸 Paiement libéré → ouverture ActiveRepairModal", report);
           setInProgressModal({ isOpen: false, report: null });
           setAlerteActuelle(report);
         }
 
         if (report.escrowStatus === "refunded") {
           // Paiement annulé
+          console.log("↩️ Paiement remboursé → fermeture modals", report);
           setInProgressModal({ isOpen: false, report: null });
           setAlerteActuelle(null);
         }
@@ -139,6 +141,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
   // 🔑 Solidaire valide les frais et déclenche le séquestre
   const handleConfirmPricing = async (alerte, montant, fraisAnnules) => {
+      console.log("💬 Confirmation frais pour alerte:", alerte?.id, "montant:", montant);
   if (!alerte?.reportId) return;
 
   try {
@@ -168,6 +171,7 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
     // Crée le séquestre Stripe
     const escrowResult = await createEscrow(alerte.reportId, finalAmount, setPaymentStatus);
+    console.log("✅ Escrow créé → ouverture InProgressModal pour le solidaire");
 
     if (!escrowResult.success) {
       toast.error("⚠️ Impossible de créer le paiement. Réessayez plus tard.");
@@ -203,12 +207,15 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 // };
 
 const handleReleasePayment = async (report) => {
+  console.log("💸 handleReleasePayment appelé pour report:", report?.id);
   if (!report?.id) {
     toast.error("❌ Report ID manquant !");
     return;
   }
 
-  await releaseEscrow(report.id, setPaymentStatus);
+  const data = await releaseEscrow(report.id, setPaymentStatus);
+  console.log("💸 releaseEscrow result:", data);
+  // await releaseEscrow(report.id, setPaymentStatus);
   setInProgressModal({ isOpen: false, report: null });
   toast.success("✅ Paiement libéré !");
 };
