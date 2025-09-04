@@ -4,6 +4,8 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 import { loadStripe } from "@stripe/stripe-js";
 import { ShieldCheck, CreditCard, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
+import { useTranslation } from 'react-i18next';
+
 
 // Clé publique Stripe
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);

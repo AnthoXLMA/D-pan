@@ -28,6 +28,10 @@ import { useNavigate } from "react-router-dom";
 import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt } from "react-icons/fa";
 import Chat from "./Chat.jsx";
 import ProfileForm from "./ProfileForm.jsx";
+import i18n from "i18next";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./utils/LanguageSwitcher.jsx"; // adapte le chemin
+
 
 
 export default function App() {
@@ -401,39 +405,49 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow relative">
-        <h1 className="text-xl font-bold">Bienvenue { user.username || user.email}</h1>
-        <div className="relative">
-          <button
-            onClick={() => setShowProfileMenu((prev) => !prev)}
-            className="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg"
-          >
-            {user.username ? user.username[0].toUpperCase() : "U"}
-          </button>
+  {/* Titre */}
+  <h1 className="text-xl font-bold">Bienvenue {user.username || user.email}</h1>
 
-          {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white text-black shadow-lg rounded-lg z-50">
-              <div className="px-4 py-2 border-b font-medium">
-                {user.username || "Utilisateur"}
-              </div>
-              <button
-                onClick={() => {
-                  setShowProfileForm(true);
-                  setShowProfileMenu(false); // ferme le menu quand on clique sur éditer
-                }}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                Éditer profil
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-              >
-                Se déconnecter
-              </button>
-            </div>
-          )}
+  {/* Section droite : profil + switcher */}
+  <div className="flex items-center gap-4 relative">
+    {/* Language Switcher */}
+    <LanguageSwitcher />
+
+    {/* Profil */}
+    <div className="relative">
+      <button
+        onClick={() => setShowProfileMenu((prev) => !prev)}
+        className="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-lg"
+      >
+        {user.username ? user.username[0].toUpperCase() : "U"}
+      </button>
+
+      {showProfileMenu && (
+        <div className="absolute right-0 mt-2 w-48 bg-white text-black shadow-lg rounded-lg z-50">
+          <div className="px-4 py-2 border-b font-medium">
+            {user.username || "Utilisateur"}
+          </div>
+          <button
+            onClick={() => {
+              setShowProfileForm(true);
+              setShowProfileMenu(false); // ferme le menu
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+          >
+            Éditer profil
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+          >
+            Se déconnecter
+          </button>
         </div>
-      </header>
+      )}
+    </div>
+  </div>
+</header>
+
 
 
   <main className="flex-1 relative bg-gray-100">

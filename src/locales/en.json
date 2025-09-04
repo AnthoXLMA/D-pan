@@ -1,0 +1,11 @@
+{
+  "alerts": {
+    "noAlerts": "No alerts yet",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
+  "payment": {
+    "block": "Block payment",
+    "released": "Payment released to helper!"
+  }
+}
