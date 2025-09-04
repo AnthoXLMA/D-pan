@@ -40,10 +40,7 @@ export const createEscrow = async (reportId, amount) => {
  * 2️⃣ Libérer le paiement (capturer le séquestre)
  */
 export const releaseEscrow = async (reportId, setPaymentStatus) => {
-  if (!reportId) {
-    console.error("❌ releaseEscrow: reportId manquant !");
-    return;
-  }
+  if (!reportId) return;
 
   const res = await fetch(`${API_URL}/release-payment`, {
     method: "POST",
@@ -52,10 +49,14 @@ export const releaseEscrow = async (reportId, setPaymentStatus) => {
   });
 
   const data = await res.json();
-  if (data.success) setPaymentStatus("released");
+  if (data.success) {
+    setPaymentStatus("released");
+    await updateDoc(doc(db, "reports", reportId), { escrowStatus: "released" });
+  }
 
   return data;
 };
+
 
 
 
