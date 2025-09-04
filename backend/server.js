@@ -1,11 +1,13 @@
-// server.js
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import admin from "firebase-admin";  // 🔹 Firebase admin
+import admin from "firebase-admin";
+import stripeRoutes from "./routes/stripeRoutes.js";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const serviceAccount = require("./serviceAccountKey.json"); // ✅ CommonJS-style
+const serviceAccount = require("./serviceAccountKey.json");
+
+
 
 import { createPaymentIntent, capturePaymentIntent, refundPaymentIntent } from "./stripeService.js";
 
@@ -22,6 +24,9 @@ if (!admin.apps.length) {
 const app = express();
 app.use(cors());
 app.use(express.json());
+// toutes les routes Stripe
+app.use("/api/stripe", stripeRoutes);
+
 
 // Middleware de log
 app.use((req, res, next) => {
