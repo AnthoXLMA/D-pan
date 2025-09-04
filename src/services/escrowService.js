@@ -3,7 +3,8 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase.js"; // adapte le chemin selon ton projet
 
 
-const API_URL = "http://localhost:4242";
+// const API_URL = "http://localhost:4242";
+const API_URL = "http://localhost:4242/api"; // ajoute /api
 
 /**
  * 1️⃣ Créer un séquestre (paiement en attente)

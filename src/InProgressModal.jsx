@@ -16,6 +16,7 @@ export default function InProgressModal({
   // Reset loading si le modal se ferme ou change de report/solidaire
   useEffect(() => {
     if (!isOpen) setLoading(false);
+    console.log("🔔 InProgressModal isOpen:", isOpen, "report:", report, "solidaire:", solidaire);
   }, [isOpen, report, solidaire]);
 
   // Ne rien afficher si modal fermé ou props manquantes
