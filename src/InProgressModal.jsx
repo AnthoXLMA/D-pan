@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { releaseEscrow } from "./services/escrowService.js";
 import { toast } from "react-toastify";
+import { createStripeAccountForSolidaire } from "./services/stripeFrontendService.js";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "./firebase.js";
+
 
 export default function InProgressModal({
   isOpen,
@@ -53,6 +57,18 @@ export default function InProgressModal({
     }
   };
 
+  const handleCreateStripeAccount = async () => {
+  const account = await createStripeAccountForSolidaire();
+  if (!account) return;
+
+  // Stocker l'ID Stripe dans Firestore pour le solidaire
+  await updateDoc(doc(db, "users", solidaire.uid), {
+    stripeAccountId: account.id
+  });
+
+  console.log("Stripe account créé pour le solidaire:", account.id);
+};
+
 //   const handleComplete = async () => {
 //   setLoading(true);
 //   const res = await releaseEscrow(report.id, report.paymentIntentId);
@@ -86,6 +102,14 @@ export default function InProgressModal({
           <p className="mb-2">
             <strong>Matériel :</strong> {report.materiel}
           </p>
+        )}
+
+        {!solidaire.stripeAccountId ? (
+          <button onClick={handleCreateStripeAccount} className="btn-blue w-full">
+            Connecter mon compte Stripe pour recevoir le paiement
+          </button>
+        ) : (
+          <p>Votre compte Stripe est prêt. Vous recevrez automatiquement vos gains.</p>
         )}
 
         <div className="flex gap-2 mt-4">

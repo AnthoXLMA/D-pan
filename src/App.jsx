@@ -31,7 +31,7 @@ import ProfileForm from "./ProfileForm.jsx";
 import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./utils/LanguageSwitcher.jsx"; // adapte le chemin
-
+import { createStripeAccountForSolidaire, getStripeDashboardLink } from "./services/stripeFrontendService";
 
 
 export default function App() {
@@ -334,6 +334,20 @@ export default function App() {
     }
   };
 
+const handleCreateStripeAccount = async () => {
+  const account = await createStripeAccountForSolidaire();
+  if (!account) return;
+
+  await updateDoc(doc(db, "users", user.uid), { stripeAccountId: account.id });
+  console.log("Stripe account créé pour le solidaire:", account.id);
+};
+
+const handleDashboardStripe = async () => {
+  const dashboardLink = await getStripeDashboardLink(user.stripeAccountId);
+  window.open(dashboardLink, "_blank");
+};
+
+
   // Annuler un report (seulement si c'est le sien)
   const cancelReport = async (reportId) => {
     if (!user) return;
@@ -407,7 +421,15 @@ export default function App() {
       <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow relative">
   {/* Titre */}
   <h1 className="text-xl font-bold">Bienvenue {user.username || user.email}</h1>
-
+  {!user.stripeAccountId ? (
+    <button onClick={handleCreateStripeAccount} className="btn-primary">
+      Créer/Connecter mon compte Stripe
+    </button>
+  ) : (
+    <button onClick={handleDashboardStripe} className="btn-secondary">
+      Tableau Stripe
+    </button>
+  )}
   {/* Section droite : profil + switcher */}
   <div className="flex items-center gap-4 relative">
     {/* Language Switcher */}
