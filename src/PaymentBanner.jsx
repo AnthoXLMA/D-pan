@@ -95,7 +95,7 @@ export default function PaymentBanner({ report, solidaire, setInProgressModal })
             Paiement Sécurisé
           </h3>
           <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-600">
-            Escrow
+            Séquestre
           </span>
         </div>
 
