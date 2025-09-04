@@ -177,17 +177,27 @@ export default function AlertsListener({ user, setSelectedAlert }) {
 
 
 // Exemple AlertsListener.jsx
+// const handleReleasePayment = async (report) => {
+//   if (!report?.paymentIntentId) {
+//     toast.error("❌ PaymentIntent ID manquant !");
+//     return;
+//   }
+
+//   await releaseEscrow(report.paymentIntentId, setPaymentStatus);
+//   setInProgressModal({ isOpen: false, report: null });
+//   toast.success("✅ Paiement libéré !");
+// };
+
 const handleReleasePayment = async (report) => {
-  if (!report?.paymentIntentId) {
-    toast.error("❌ PaymentIntent ID manquant !");
+  if (!report?.id) {
+    toast.error("❌ Report ID manquant !");
     return;
   }
 
-  await releaseEscrow(report.paymentIntentId, setPaymentStatus);
+  await releaseEscrow(report.id, setPaymentStatus);
   setInProgressModal({ isOpen: false, report: null });
   toast.success("✅ Paiement libéré !");
 };
-
 
   const statusColor = (status) => {
     switch (status) {
