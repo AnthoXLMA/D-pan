@@ -1,0 +1,11 @@
+{
+  "alerts": {
+    "noAlerts": "Aucune alerte pour l’instant",
+    "accept": "Accepter",
+    "reject": "Refuser"
+  },
+  "payment": {
+    "block": "Bloquer le paiement",
+    "released": "Paiement libéré au solidaire !"
+  }
+}
