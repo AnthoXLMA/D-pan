@@ -35,13 +35,13 @@ const getSolidaireIconWithBadge = (status, pendingAlertsCount) => {
       baseIconUrl = "https://img.icons8.com/?size=100&id=111638&format=png&color=000000";
       break;
     case "offline":
-      baseIconUrl = "https://img.icons8.com/?size=100&id=Qp09HbbXXmIy&format=png&color=000000";
+      baseIconUrl = "https://img.icons8.com/?size=100&id=7819&format=png&color=4D4D4D";
       break;
     default:
       baseIconUrl = "https://img.icons8.com/?size=100&id=hwOJ5x33ywg6&format=png&color=000000";
   }
 
-  if (!pendingAlertsCount) return new L.Icon({ iconUrl: baseIconUrl, iconSize: [50, 50] });
+  if (!pendingAlertsCount) return new L.Icon({ iconUrl: baseIconUrl, iconSize: [30, 30] });
 
   return L.divIcon({
     className: "solidaire-badge-icon",
