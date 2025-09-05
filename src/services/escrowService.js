@@ -5,7 +5,7 @@ import { db } from "../firebase.js"; // adapte le chemin selon ton projet
 
 // const API_URL = "http://localhost:4242";
 // const API_URL = "http://192.168.1.42:4242/api/stripe";
-const ESCROW_API_URL = "https://2e3db86eac9e.ngrok-free.app"; // sans /api/stripe
+const ESCROW_API_URL = "https://de3a38661832.ngrok-free.app"; // sans /api/stripe
 
 
 /**

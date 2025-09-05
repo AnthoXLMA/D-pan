@@ -153,15 +153,22 @@ app.use(express.json());
 
 // CORS : autoriser le front desktop et mobile sur le même réseau
 app.use(cors({
-  origin: [
-    "http://localhost:3000",              // dev local
-    "http://192.168.1.42:3000",           // test mobile LAN
-    "https://solid-auto-app.web.app"      // ton app déployée sur Firebase
-  ],
+  origin: (origin, callback) => {
+    // Autorise localhost et LAN
+    if (!origin || origin.startsWith("http://localhost") || origin.startsWith("http://192.168")) {
+      callback(null, true);
+    }
+    // Autorise tout HTTPS (Firebase Hosting, ngrok)
+    else if (origin.startsWith("https://")) {
+      callback(null, true);
+    }
+    else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-
 
 // toutes les routes Stripe
 app.use("/api/stripe", stripeRoutes);
