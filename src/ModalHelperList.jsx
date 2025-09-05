@@ -25,7 +25,7 @@ export default function ModalHelperList({ helpers, onClose, userPosition, onAler
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 overflow-hidden relative">
-        <h3 className="text-center text-xl font-bold mb-4">Utilisateurs disponibles</h3>
+        <h3 className="text-center text-xl font-bold mb-4">Utilisateurs</h3>
 
         <div className="flex items-center justify-between">
           {/* Flèche gauche */}

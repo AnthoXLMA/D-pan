@@ -193,18 +193,30 @@ export default function AlertsListener({ user, setSelectedAlert }) {
   }
 };
 
+const cancelRepair = async (report) => {
+  if (!report?.id) return toast.error("❌ Report ID manquant !");
 
-// Exemple AlertsListener.jsx
-// const handleReleasePayment = async (report) => {
-//   if (!report?.paymentIntentId) {
-//     toast.error("❌ PaymentIntent ID manquant !");
-//     return;
-//   }
+  try {
+    const reportRef = doc(db, "reports", report.id);
+    await updateDoc(reportRef, {
+      status: "annulé",
+      helperUid: null,
+      helperConfirmed: false,
+      notificationForOwner: "🚨 Le solidaire a annulé le dépannage",
+    });
 
-//   await releaseEscrow(report.paymentIntentId, setPaymentStatus);
-//   setInProgressModal({ isOpen: false, report: null });
-//   toast.success("✅ Paiement libéré !");
-// };
+    // Remettre le solidaire disponible
+    await updateDoc(doc(db, "solidaires", user.uid), { status: "disponible" });
+    await updateUserStatus(user.uid, "disponible", true, null);
+
+    // Fermer le modal
+    setInProgressModal({ isOpen: false, report: null });
+    toast.info("❌ Dépannage annulé !");
+  } catch (err) {
+    console.error("Erreur annulation dépannage :", err);
+    toast.error("❌ Impossible d'annuler le dépannage.");
+  }
+};
 
 const handleReleasePayment = async (report) => {
   console.log("💸 handleReleasePayment appelé pour report:", report?.id);
@@ -249,6 +261,7 @@ const handleReleasePayment = async (report) => {
           report={inProgressModal.report}
           solidaire={user}
           onComplete={handleReleasePayment}
+          onCancel={cancelRepair}
         />
 
         {alerteActuelle && solidaireActuel && (
