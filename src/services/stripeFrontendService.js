@@ -5,7 +5,7 @@ const STRIPE_API_URL = "http://192.168.1.42:4242/api/stripe";
 
 export const createStripeAccountForSolidaire = async () => {
   try {
-    const res = await fetch(`${API_URL}/create-account`, {
+    const res = await fetch(`${STRIPE_API_URL}/create-account`, {
       method: "POST",
     });
 
@@ -21,7 +21,7 @@ export const createStripeAccountForSolidaire = async () => {
 
 export const getStripeDashboardLink = async (stripeAccountId) => {
   try {
-    const res = await fetch(`${API_URL}/create-login-link`, {
+    const res = await fetch(`${STRIPE_API_URL}/create-login-link`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stripeAccountId }),
