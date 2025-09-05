@@ -44,7 +44,12 @@ export default function Auth({ setUser }) {
   const handleLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
+      const user = userCredential.user;
+
+      // ✅ Mettre à jour online dans Firestore après login
+      await setDoc(doc(db, "users", user.uid), { online: true }, { merge: true });
+
+      setUser(user);
     } catch (error) {
       console.error(error);
       alert("Erreur de connexion : " + error.message);
@@ -60,13 +65,13 @@ export default function Auth({ setUser }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Créer document Firestore
+      // Créer document Firestore avec online=true
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
         username,
-        materiel, // maintenant tableau
-        online: true,
+        materiel,       // tableau de matériel
+        online: true,   // ✅ online dès la création
         latitude: null,
         longitude: null,
       });
