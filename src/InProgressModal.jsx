@@ -58,17 +58,95 @@ export default function InProgressModal({
     }
   };
 
-  const handleCreateStripeAccount = async () => {
-  const account = await createStripeAccountForSolidaire();
-  if (!account) return;
+//   const handleCreateStripeAccount = async () => {
+//   const account = await createStripeAccountForSolidaire();
+//   if (!account) return;
 
-  // Stocker l'ID Stripe dans Firestore pour le solidaire
-  await updateDoc(doc(db, "users", solidaire.uid), {
-    stripeAccountId: account.id
-  });
+//   // Stocker l'ID Stripe dans Firestore pour le solidaire
+//   await updateDoc(doc(db, "users", solidaire.uid), {
+//     stripeAccountId: account.id
+//   });
 
-  console.log("Stripe account créé pour le solidaire:", account.id);
+//   console.log("Stripe account créé pour le solidaire:", account.id);
+// };
+
+const handleCreateStripeAccount = async () => {
+  if (!solidaire?.uid || !solidaire?.email) {
+    toast.error("UID ou email du solidaire manquant !");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    console.log("🔹 Création du compte Stripe pour :", solidaire.email);
+
+    // 1️⃣ Créer le compte Stripe
+    const accountRes = await fetch("http://localhost:4242/api/stripe/create-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // 🔹 Debug : lire la réponse brute pour voir si c'est du JSON
+    const accountText = await accountRes.text();
+    console.log("💬 accountRes text:", accountText);
+
+    let accountData;
+    try {
+      accountData = JSON.parse(accountText);
+    } catch (err) {
+      console.error("❌ Impossible de parser JSON pour create-account:", err);
+      throw new Error("Réponse serveur invalide pour create-account : voir console");
+    }
+
+    if (!accountData?.success || !accountData.account?.id) {
+      throw new Error(accountData?.error || "Compte Stripe invalide");
+    }
+
+    const stripeAccountId = accountData.account.id;
+
+    // 2️⃣ Stocker l'ID Stripe dans Firestore
+    await updateDoc(doc(db, "users", solidaire.uid), { stripeAccountId });
+    console.log("✅ Stripe accountId stocké :", stripeAccountId);
+
+    // 3️⃣ Créer le lien d’onboarding
+    const linkRes = await fetch("http://localhost:4242/api/stripe/create-account-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stripeAccountId,
+        frontendUrl: window.location.origin,
+      }),
+    });
+
+    const linkText = await linkRes.text();
+    console.log("💬 linkRes text:", linkText);
+
+    let linkData;
+    try {
+      linkData = JSON.parse(linkText);
+    } catch (err) {
+      console.error("❌ Impossible de parser JSON pour create-account-link:", err);
+      throw new Error("Réponse serveur invalide pour create-account-link : voir console");
+    }
+
+    if (!linkData?.success || !linkData.url) {
+      throw new Error(linkData?.error || "Lien d’onboarding invalide");
+    }
+
+    // 4️⃣ Rediriger vers Stripe pour compléter l’onboarding
+    console.log("🔹 Redirection vers Stripe onboarding :", linkData.url);
+    window.location.href = linkData.url;
+
+  } catch (err) {
+    console.error("❌ Erreur Stripe onboarding:", err);
+    toast.error(`Impossible de connecter votre compte Stripe: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
 };
+
+
+
 
 //   const handleComplete = async () => {
 //   setLoading(true);
