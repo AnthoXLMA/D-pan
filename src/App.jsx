@@ -19,19 +19,24 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { createStripeAccountForSolidaire, getStripeDashboardLink } from "./services/stripeFrontendService";
+import { useNavigate } from "react-router-dom";
+import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt, FaStripe } from "react-icons/fa";
+import i18n from "i18next";
+import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useReportsListener from "./useReportsListener.jsx";
 import PayButton from "./PayButton.jsx";
+import Dashboard from "./Dashboard.jsx";
+import AlertHistory from "./AlertHistory.jsx";
+import UserReports from "./UserReports";
+import ModalHelperList from "./ModalHelperList";
 import { updateUserStatus } from "./userService.js";
-import { useNavigate } from "react-router-dom";
-import { FaCommentDots, FaBook, FaTachometerAlt, FaMapMarkedAlt } from "react-icons/fa";
 import Chat from "./Chat.jsx";
 import ProfileForm from "./ProfileForm.jsx";
-import i18n from "i18next";
-import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "./utils/LanguageSwitcher.jsx"; // adapte le chemin
-import { createStripeAccountForSolidaire, getStripeDashboardLink } from "./services/stripeFrontendService";
+import LanguageSwitcher from "./utils/LanguageSwitcher.jsx";
+// import { fakeSolidaires } from './fakeUsers';
 
 
 export default function App() {
@@ -421,18 +426,28 @@ const handleDashboardStripe = async () => {
       <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow relative">
   {/* Titre */}
   <h1 className="text-xl font-bold">Bienvenue {user.username || user.email}</h1>
+
+  {/* Bouton Stripe icône */}
   {!user.stripeAccountId ? (
-    <button onClick={handleCreateStripeAccount} className="btn-primary">
-      Créer/Connecter mon compte Stripe
+    <button
+      onClick={handleCreateStripeAccount}
+      className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-blue-600 shadow hover:shadow-lg transition"
+      title="Créer/Connecter mon compte Stripe"
+    >
+      <FaStripe size={20} />
     </button>
   ) : (
-    <button onClick={handleDashboardStripe} className="btn-secondary">
-      Tableau Stripe
+    <button
+      onClick={handleDashboardStripe}
+      className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-blue-600 shadow hover:shadow-lg transition"
+      title="Accéder au tableau Stripe"
+    >
+      <FaStripe size={20} />
     </button>
   )}
+
   {/* Section droite : profil + switcher */}
   <div className="flex items-center gap-4 relative">
-    {/* Language Switcher */}
     <LanguageSwitcher />
 
     {/* Profil */}
@@ -473,106 +488,116 @@ const handleDashboardStripe = async () => {
 
 
   <main className="flex-1 relative bg-gray-100">
-  {/* Carte occupe tout */}
-  <div className="absolute inset-0">
-    <MapView
-      reports={reports}
-      solidaires={filteredSolidaires}
-      alerts={alerts}
-      userPosition={currentPosition}
-      onPositionChange={setCurrentPosition}
-      onReportClick={setActiveReport}
-      onAlertUser={onAlertUser}
-      activeReport={activeReport}
-      selectedAlert={selectedAlert}
-      cancelReport={cancelReport}
-      currentUserUid={user.uid}
-      ref={mapRef}
-      showHelperList={showHelperList}
-      setShowHelperList={setShowHelperList}
-    />
-  </div>
-
+  {page === "dashboard" ? (
+    // Dashboard s'affiche à la place de la carte
+    <div className="absolute inset-0 z-10">
+      <Dashboard user={user} />
+    </div>
+  ) : (
+    // Carte occupe tout l'espace seulement si page !== dashboard
+    <div className="absolute inset-0 z-0">
+      <MapView
+        reports={reports}
+        solidaires={filteredSolidaires}
+        alerts={alerts}
+        userPosition={currentPosition}
+        onPositionChange={setCurrentPosition}
+        onReportClick={setActiveReport}
+        onAlertUser={onAlertUser}
+        activeReport={activeReport}
+        selectedAlert={selectedAlert}
+        cancelReport={cancelReport}
+        currentUserUid={user.uid}
+        ref={mapRef}
+        showHelperList={showHelperList}
+        setShowHelperList={setShowHelperList}
+      />
+    </div>
+  )}
 
   {showProfileForm && (
-  <ProfileForm
-    user={user}
-    onClose={() => setShowProfileForm(false)}
-    onUpdate={(updatedUser) => {
-    // Créer un objet propre pour Firestore
-      const sanitizedUser = {
-        uid: updatedUser.uid,
-        name: updatedUser.name,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        materiel: updatedUser.materiel,
-      };
+    <ProfileForm
+      user={user}
+      onClose={() => setShowProfileForm(false)}
+      onUpdate={(updatedUser) => {
+        const sanitizedUser = {
+          uid: updatedUser.uid,
+          name: updatedUser.name,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          materiel: updatedUser.materiel,
+        };
+        setUser(sanitizedUser);
+        setDoc(doc(db, "solidaires", sanitizedUser.uid), sanitizedUser, { merge: true });
+      }}
+    />
+  )}
 
-      setUser(sanitizedUser); // met à jour le state local
-      setDoc(doc(db, "solidaires", sanitizedUser.uid), sanitizedUser, { merge: true });
-    }}
-  />
-)}
-
-
-{/* Menu flottant style Instagram avec bouton + centré responsive */}
-      {/* Menu flottant */}
-      <div className="fixed bottom-0 left-0 w-full bg-white shadow-t z-50">
-        <div className="relative flex justify-between items-center px-4 py-3 max-w-screen-lg mx-auto">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setShowPanneModal(true)}
-              className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium flex items-center"
-            >
-              ⚡ {userReports.length}
-            </button>
-            <button onClick={() => setPage("dashboard")} className="flex flex-col items-center text-center">
-              <FaTachometerAlt size={24} />
-              <span className="text-xs mt-1">Dashboard</span>
-            </button>
-            <button
-              onClick={() => { if (page !== "map") setPage("map"); else mapRef.current?.recenter?.(); }}
-              className="flex flex-col items-center text-center"
-            >
-              <FaMapMarkedAlt size={24} />
-              <span className="text-xs mt-1">Carte</span>
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <button onClick={() => setShowChat(true)} className="flex flex-col items-center text-center">
-              <FaCommentDots size={24} />
-              <span className="text-xs mt-1">Chat</span>
-            </button>
-
-            <button onClick={() => setShowAlertHistory(true)} className="flex flex-col items-center text-center relative">
-              <FaBook size={24} />
-              <span className="text-xs mt-1">Feed</span>
-              {alerts.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full flex items-center justify-center animate-pulse">
-                  {alerts.length}
-                </span>
-              )}
-            </button>
-
-            <button onClick={() => setShowHelperList(true)} className="flex flex-col items-center justify-center relative text-center">
-              👥
-              <span className="absolute -top-2 -right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                {onlineUsers}
-              </span>
-              <span className="text-xs mt-1">En ligne</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Bouton + */}
-      <div className="fixed bottom-20 right-4 z-50">
+  {/* Menu flottant style Instagram avec bouton + centré responsive */}
+  <div className="fixed bottom-0 left-0 w-full bg-white shadow-t z-50">
+    <div className="relative flex justify-between items-center px-4 py-3 max-w-screen-lg mx-auto">
+      <div className="flex items-center space-x-4">
         <button
-          onClick={() => setShowReportForm(true)}
-          className="w-16 h-16 bg-blue-600 hover:bg-blue-700 rounded-full shadow-2xl flex items-center justify-center text-white text-4xl font-bold border-4 border-white transition-transform hover:scale-110"
-        >+</button>
+          onClick={() => setShowPanneModal(true)}
+          className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium flex items-center"
+        >
+          ⚡ {userReports.length}
+        </button>
+        <button
+          onClick={() => setPage("dashboard")}
+          className="flex flex-col items-center text-center"
+        >
+          <FaTachometerAlt size={24} />
+          <span className="text-xs mt-1">Dashboard</span>
+        </button>
+        <button
+          onClick={() => {
+            if (page !== "map") setPage("map");
+            else mapRef.current?.recenter?.();
+          }}
+          className="flex flex-col items-center text-center"
+        >
+          <FaMapMarkedAlt size={24} />
+          <span className="text-xs mt-1">Carte</span>
+        </button>
       </div>
+
+      <div className="flex items-center space-x-4">
+        <button onClick={() => setShowChat(true)} className="flex flex-col items-center text-center">
+          <FaCommentDots size={24} />
+          <span className="text-xs mt-1">Chat</span>
+        </button>
+
+        <button onClick={() => setShowAlertHistory(true)} className="flex flex-col items-center text-center relative">
+          <FaBook size={24} />
+          <span className="text-xs mt-1">Feed</span>
+          {alerts.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full flex items-center justify-center animate-pulse">
+              {alerts.length}
+            </span>
+          )}
+        </button>
+
+        <button onClick={() => setShowHelperList(true)} className="flex flex-col items-center justify-center relative text-center">
+          👥
+          <span className="absolute -top-2 -right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+            {onlineUsers}
+          </span>
+          <span className="text-xs mt-1">En ligne</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* Bouton + */}
+  <div className="fixed bottom-20 right-4 z-50">
+    <button
+      onClick={() => setShowReportForm(true)}
+      className="w-16 h-16 bg-blue-600 hover:bg-blue-700 rounded-full shadow-2xl flex items-center justify-center text-white text-4xl font-bold border-4 border-white transition-transform hover:scale-110"
+    >
+      +
+    </button>
+  </div>
 
   {/* Bottom sheet : Report Form */}
   {showReportForm && (
@@ -583,7 +608,7 @@ const handleDashboardStripe = async () => {
           handleNewReport(r);
           setShowReportForm(false);
         }}
-      onClose={() => setShowReportForm(false)}
+        onClose={() => setShowReportForm(false)}
       />
       <button
         onClick={() => setShowReportForm(false)}
@@ -605,6 +630,13 @@ const handleDashboardStripe = async () => {
     </div>
   )}
 
+  {showAlertHistory && (
+    <AlertHistory
+      alerts={alerts}
+      onClose={() => setShowAlertHistory(false)}
+    />
+  )}
+
   {/* Paiement : affiché comme une card flottante */}
   {activeReport && activeReport.helperUid && activeReport.status === "aide en cours" && user?.uid === activeReport.ownerUid && (
     <div className="fixed bottom-24 left-4 right-4 bg-white rounded-xl shadow-lg p-4 z-40">
@@ -613,13 +645,9 @@ const handleDashboardStripe = async () => {
   )}
 </main>
 
-
-      <footer className="bg-gray-100 text-center text-sm text-gray-500 p-2">
-        © {new Date().getFullYear()} U-Boto - Tous droits réservés
-      </footer>
-
-      <ToastContainer position="top-right" autoClose={3000} />
-    </div>
-  );
+<footer className="bg-gray-100 text-center text-sm text-gray-500 p-2">
+ © {new Date().getFullYear()} U-Boto - Tous droits réservés </footer>
+ <ToastContainer position="top-right" autoClose={3000} />
+ </div>
+ );
 }
-
