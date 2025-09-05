@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { createStripeAccountForSolidaire } from "./services/stripeFrontendService.js";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase.js";
+import { STRIPE_API_URL } from "./services/stripeFrontendService.js";
 
 
 export default function InProgressModal({
@@ -80,11 +81,16 @@ const handleCreateStripeAccount = async () => {
     setLoading(true);
     console.log("🔹 Création du compte Stripe pour :", solidaire.email);
 
+    // const accountRes = await fetch("http://localhost:4242/api/stripe/create-account", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    // });
     // 1️⃣ Créer le compte Stripe
-    const accountRes = await fetch("http://localhost:4242/api/stripe/create-account", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
+    const accountRes = await fetch(`${STRIPE_API_URL}/create-account`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
 
     // 🔹 Debug : lire la réponse brute pour voir si c'est du JSON
     const accountText = await accountRes.text();
@@ -109,7 +115,16 @@ const handleCreateStripeAccount = async () => {
     console.log("✅ Stripe accountId stocké :", stripeAccountId);
 
     // 3️⃣ Créer le lien d’onboarding
-    const linkRes = await fetch("http://localhost:4242/api/stripe/create-account-link", {
+    // const linkRes = await fetch("http://localhost:4242/api/stripe/create-account-link", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({
+    //     stripeAccountId,
+    //     frontendUrl: window.location.origin,
+    //   }),
+    // });
+
+    const linkRes = await fetch(`${STRIPE_API_URL}/create-account-link`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
