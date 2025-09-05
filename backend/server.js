@@ -153,9 +153,15 @@ app.use(express.json());
 
 // CORS : autoriser le front desktop et mobile sur le même réseau
 app.use(cors({
-  origin: ["http://localhost:3000", "http://192.168.1.42:3000"], // <-- front React
-  methods: ["GET","POST","PUT","DELETE"],
+  origin: [
+    "http://localhost:3000",              // dev local
+    "http://192.168.1.42:3000",           // test mobile LAN
+    "https://solid-auto-app.web.app"      // ton app déployée sur Firebase
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
+
 
 // toutes les routes Stripe
 app.use("/api/stripe", stripeRoutes);
