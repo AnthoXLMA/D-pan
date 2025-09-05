@@ -21,18 +21,21 @@ if (!admin.apps.length) {
 }
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 // toutes les routes Stripe
 app.use("/api/stripe", stripeRoutes);
 
+
+app.use(cors({
+  origin: ["http://localhost:3000", "http://192.168.1.42:3000"], // front accessible depuis le mobile
+  methods: ["GET","POST","PUT","DELETE"],
+}));
 
 // Middleware de log
 app.use((req, res, next) => {
   console.log(`[REQUEST] ${req.method} ${req.url}`, req.body);
   next();
 });
-
 
 /**
  * 1️⃣ Créer un paiement (escrow)
