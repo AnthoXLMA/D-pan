@@ -8,7 +8,6 @@ const require = createRequire(import.meta.url);
 const serviceAccount = require("./serviceAccountKey.json");
 
 
-
 import { createPaymentIntent, capturePaymentIntent, refundPaymentIntent } from "./stripeService.js";
 
 // ⚡ Pour être sûr que Firebase détecte le project_id
