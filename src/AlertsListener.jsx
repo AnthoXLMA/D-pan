@@ -19,7 +19,7 @@ import { createEscrow, releaseEscrow } from "./services/escrowService";
 import HelpBanner from "./HelpBanner.jsx";
 import PaymentBanner from "./PaymentBanner.jsx";
 import ActiveRepairModal from "./ActiveRepairModal.jsx";
-
+import RepairModal from "./RepairModal.jsx";
 
 
 export default function AlertsListener({ user, setSelectedAlert }) {
@@ -231,8 +231,16 @@ const handleReleasePayment = async (report) => {
 
   const data = await releaseEscrow(report.id, setPaymentStatus);
   console.log("💸 releaseEscrow result:", data);
-  // await releaseEscrow(report.id, setPaymentStatus);
+
+  // Fermer l'InProgress
   setInProgressModal({ isOpen: false, report: null });
+
+  // ⚡ Mettre à jour l'état local pour déclencher ActiveRepairModal
+  const reportRef = doc(db, "reports", report.id);
+  const reportSnap = await getDoc(reportRef);
+  if (reportSnap.exists()) {
+    setAlerteActuelle({ id: report.id, ...reportSnap.data() });
+  }
   toast.success("✅ Paiement libéré !");
 };
 
@@ -259,14 +267,14 @@ const handleReleasePayment = async (report) => {
           onConfirm={handleConfirmPricing}
         />
 
-        <InProgressModal
+{/*        <InProgressModal
           isOpen={inProgressModal.isOpen}
           onClose={() => setInProgressModal({ isOpen: false, report: null })}
           report={inProgressModal.report}
           solidaire={user}
           onComplete={handleReleasePayment}
           onCancel={cancelRepair}
-        />
+        />*/}
 
         {alerteActuelle && solidaireActuel && (
           <PaymentBanner
@@ -275,7 +283,7 @@ const handleReleasePayment = async (report) => {
             setInProgressModal={setInProgressModal}
           />
         )}
-        {alerteActuelle && (
+{/*        {alerteActuelle && (
           <ActiveRepairModal
             report={alerteActuelle}
             solidaire={user}
@@ -285,7 +293,17 @@ const handleReleasePayment = async (report) => {
               setAlerteActuelle(null); // ferme le modal après le dépannage
             }}
           />
+        )}*/}
+
+        {alerteActuelle && (
+          <RepairModal
+            reportId={alerteActuelle.id}
+            user={user}
+            userPosition={user.position}
+            onClose={() => setAlerteActuelle(null)}
+          />
         )}
+
 {/*
         <PaymentBanner
           report={report}
