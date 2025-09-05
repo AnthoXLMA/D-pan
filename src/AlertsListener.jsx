@@ -19,7 +19,7 @@ import { createEscrow, releaseEscrow } from "./services/escrowService";
 import HelpBanner from "./HelpBanner.jsx";
 import PaymentBanner from "./PaymentBanner.jsx";
 import ActiveRepairModal from "./ActiveRepairModal.jsx";
-import RepairModal from "./RepairModal.jsx";
+// import RepairModal from "./RepairModal.jsx";
 
 
 export default function AlertsListener({ user, setSelectedAlert }) {
@@ -267,14 +267,14 @@ const handleReleasePayment = async (report) => {
           onConfirm={handleConfirmPricing}
         />
 
-{/*        <InProgressModal
+{        <InProgressModal
           isOpen={inProgressModal.isOpen}
           onClose={() => setInProgressModal({ isOpen: false, report: null })}
           report={inProgressModal.report}
           solidaire={user}
           onComplete={handleReleasePayment}
           onCancel={cancelRepair}
-        />*/}
+        />}
 
         {alerteActuelle && solidaireActuel && (
           <PaymentBanner
@@ -283,7 +283,7 @@ const handleReleasePayment = async (report) => {
             setInProgressModal={setInProgressModal}
           />
         )}
-{/*        {alerteActuelle && (
+        {alerteActuelle && (
           <ActiveRepairModal
             report={alerteActuelle}
             solidaire={user}
@@ -293,23 +293,16 @@ const handleReleasePayment = async (report) => {
               setAlerteActuelle(null); // ferme le modal après le dépannage
             }}
           />
-        )}*/}
+        )}
 
-        {alerteActuelle && (
+ {/*       {alerteActuelle && (
           <RepairModal
             reportId={alerteActuelle.id}
             user={user}
             userPosition={user.position}
             onClose={() => setAlerteActuelle(null)}
           />
-        )}
-
-{/*
-        <PaymentBanner
-          report={report}
-          solidaire={solidaire}
-          setInProgressModal={setInProgressModal}
-        />*/}
+        )}*/}
 
         <HelpBanner
           report={inProgressModal.report}
