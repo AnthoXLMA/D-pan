@@ -4,7 +4,9 @@ import { db } from "../firebase.js"; // adapte le chemin selon ton projet
 
 
 // const API_URL = "http://localhost:4242";
-const API_URL = "http://192.168.1.42:4242/api/stripe";
+// const API_URL = "http://192.168.1.42:4242/api/stripe";
+const ESCROW_API_URL = "http://192.168.1.42:4242"; // sans /api/stripe
+
 
 /**
  * 1️⃣ Créer un séquestre (paiement en attente)
@@ -17,7 +19,7 @@ export const createEscrow = async (reportId, amount) => {
       return { success: true, status: "created" };
     }
 
-    const res = await fetch(`${API_URL}/create-payment`, {
+    const res = await fetch(`${ESCROW_API_URL}/create-payment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reportId, amount }),
@@ -49,7 +51,7 @@ export const createEscrow = async (reportId, amount) => {
 export const releaseEscrow = async (reportId, setPaymentStatus) => {
   if (!reportId) return;
 
-  const res = await fetch(`${API_URL}/release-payment`, {
+  const res = await fetch(`${ESCROW_API_URL}/release-payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reportId }),
@@ -74,7 +76,7 @@ export const releaseEscrow = async (reportId, setPaymentStatus) => {
 export const refundEscrow = async (paymentIntentId, setPaymentStatus) => {
   if (!paymentIntentId) return;
 
-  const res = await fetch(`${API_URL}/refund-payment`, {
+  const res = await fetch(`${ESCROW_API_URL}/refund-payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ paymentIntentId }),

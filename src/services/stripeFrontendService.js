@@ -1,5 +1,6 @@
 // const API_URL = "http://localhost:4242/api/stripe";
-const API_URL = "http://192.168.1.42:4242/api/stripe";
+// const API_URL = "http://192.168.1.42:4242/api/stripe";
+const STRIPE_API_URL = "http://192.168.1.42:4242/api/stripe";
 
 
 export const createStripeAccountForSolidaire = async () => {
