@@ -72,6 +72,7 @@ export default function ActiveRepairModal({ report, solidaire, userPosition, onC
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-xl shadow-lg w-11/12 max-w-md animate-fade-in">
         <h2 className="text-xl font-bold mb-4">Dépannage en cours</h2>
+        <h2 className="text-xl font-bold mb-4">Vous pouvez y aller!</h2>
 
         <p>📍 Sinistré : {report.ownerName} ({report.ownerEmail})</p>
         <p>💰 Montant : {report.frais} €</p>

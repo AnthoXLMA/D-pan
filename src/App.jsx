@@ -267,6 +267,8 @@ export default function App() {
       const docRef = await addDoc(collection(db, "reports"), {
         ...newReport,
         ownerUid: user.uid,
+        ownerName: user.displayName || "Anonyme",
+        ownerEmail: user.email || "",
         helperUid: null,
         notified: false,
         status: "en attente",
