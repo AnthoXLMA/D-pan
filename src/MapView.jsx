@@ -17,12 +17,12 @@ import { MATERIEL_OPTIONS } from "./constants/materiel.js";
 // === Icônes ===
 const currentUserIcon = new L.Icon({
   iconUrl: "https://img.icons8.com/?size=100&id=19608&format=png&color=000000",
-  iconSize: [50, 50],
+  iconSize: [60, 60],
 });
 
 const reportIcon = new L.Icon({
-  iconUrl: "https://img.icons8.com/?size=100&id=111638&format=png&color=000000",
-  iconSize: [60, 60],
+  iconUrl: "https://img.icons8.com/?size=100&id=5tH5sHqq0t2q&format=png&color=000000",
+  iconSize: [50, 50],
 });
 
 const getSolidaireIconWithBadge = (status, pendingAlertsCount) => {
@@ -32,10 +32,10 @@ const getSolidaireIconWithBadge = (status, pendingAlertsCount) => {
       baseIconUrl = "https://img.icons8.com/?size=100&id=I24lanX6Nq71&format=png&color=000000";
       break;
     case "busy":
-      baseIconUrl = "https://img.icons8.com/?size=100&id=12051&format=png&color=000000";
+      baseIconUrl = "https://img.icons8.com/?size=100&id=111638&format=png&color=000000";
       break;
     case "offline":
-      baseIconUrl = "https://img.icons8.com/?size=100&id=FjDeg3sLk8Y1&format=png&color=000000";
+      baseIconUrl = "https://img.icons8.com/?size=100&id=Qp09HbbXXmIy&format=png&color=000000";
       break;
     default:
       baseIconUrl = "https://img.icons8.com/?size=100&id=hwOJ5x33ywg6&format=png&color=000000";
