@@ -153,22 +153,14 @@ app.use(express.json());
 
 // CORS : autoriser le front desktop et mobile sur le même réseau
 app.use(cors({
-  origin: (origin, callback) => {
-    // Autorise localhost et LAN
-    if (!origin || origin.startsWith("http://localhost") || origin.startsWith("http://192.168")) {
-      callback(null, true);
-    }
-    // Autorise tout HTTPS (Firebase Hosting, ngrok)
-    else if (origin.startsWith("https://")) {
-      callback(null, true);
-    }
-    else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: [
+    "https://solid-auto-app.web.app",
+    /^https:\/\/.*\.ngrok-free\.app$/ // tous les ngrok HTTPS
+  ],
+  methods: ["GET","POST","PUT","DELETE"],
   credentials: true
 }));
+
 
 // toutes les routes Stripe
 app.use("/api/stripe", stripeRoutes);
