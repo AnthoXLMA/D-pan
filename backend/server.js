@@ -155,9 +155,9 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "https://solid-auto-app.web.app",
-    /^https:\/\/.*\.ngrok-free\.app$/ // tous les ngrok HTTPS
+    /^https:\/\/.*\.ngrok-free\.app$/   // autorise tous les ngrok HTTPS
   ],
-  methods: ["GET","POST","PUT","DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 

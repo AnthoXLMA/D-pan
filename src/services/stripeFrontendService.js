@@ -7,7 +7,9 @@ export const createStripeAccountForSolidaire = async () => {
   try {
     const res = await fetch(`${STRIPE_API_URL}/create-account`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
+
 
     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
     const data = await res.json();
