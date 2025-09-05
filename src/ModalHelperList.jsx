@@ -7,9 +7,12 @@ export default function ModalHelperList({ helpers, onClose, userPosition, onAler
   if (!helpers || helpers.length === 0) return null;
 
   const currentHelper = helpers[currentIndex];
-  const distance = currentHelper.latitude && currentHelper.longitude
-    ? getDistanceKm(userPosition[0], userPosition[1], currentHelper.latitude, currentHelper.longitude)
-    : "N/A";
+  const distance = getDistanceKm(
+    userPosition[0],
+    userPosition[1],
+    currentHelper.latitude,
+    currentHelper.longitude
+  );
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? helpers.length - 1 : prev - 1));
@@ -36,10 +39,12 @@ export default function ModalHelperList({ helpers, onClose, userPosition, onAler
           {/* Carte du helper */}
           <div className="flex-1 mx-4 p-4 border rounded-2xl shadow flex flex-col items-center
                           h-[250px] w-full max-w-xs overflow-y-auto">
-            {/* Badge en ligne/hors ligne */}
             <div className="flex items-center space-x-2">
               <div className={`h-3 w-3 rounded-full ${currentHelper.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-              <div className="font-medium text-lg text-center">{currentHelper.name || currentHelper.username || "Utilisateur"}</div>
+              <div className="font-medium text-lg text-center">{currentHelper.name}</div>
+              <span className={`ml-2 text-sm ${currentHelper.online ? 'text-green-600' : 'text-gray-500'}`}>
+                {currentHelper.online ? 'En ligne' : 'Hors ligne'}
+              </span>
             </div>
 
             <div className="text-sm text-gray-500 text-center mt-2">
@@ -49,9 +54,7 @@ export default function ModalHelperList({ helpers, onClose, userPosition, onAler
 
             <button
               onClick={() => onAlert(currentHelper)}
-              className={`mt-auto px-3 py-1 rounded-lg text-white ${
-                currentHelper.online && activeReport ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
+              className={`mt-auto px-3 py-1 rounded-lg text-white ${currentHelper.online && activeReport ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
               disabled={!activeReport || !currentHelper.online}
               title={!activeReport ? "Vous devez avoir un signalement actif" : !currentHelper.online ? "Utilisateur hors ligne" : ""}
             >
