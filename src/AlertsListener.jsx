@@ -247,65 +247,67 @@ const handleReleasePayment = async (report) => {
     }
   };
 
-  return (
+return (
+  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4">
     <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
-  <h4 className="mb-4 font-semibold text-lg">📢 Mes alertes reçues</h4>
+      <h4 className="mb-4 font-semibold text-lg text-center">📢 Mes alertes reçues</h4>
 
-  {cancelledAlert ? (
-    <div className="p-4 rounded-lg shadow-sm bg-red-100 text-red-800 text-center">
-      <p className="mb-2">
-        ❌ Vous avez annulé cette demande de dépannage :{" "}
-        <strong>{cancelledAlert.nature || "Panne"}</strong>
-      </p>
-      <button
-        onClick={() => setCancelledAlert(null)}
-        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-      >
-        Fermer
-      </button>
+      {cancelledAlert ? (
+        <div className="p-4 rounded-lg shadow-sm bg-red-100 text-red-800 text-center">
+          <p className="mb-2">
+            ❌ Vous avez annulé cette demande de dépannage :{" "}
+            <strong>{cancelledAlert.nature || "Panne"}</strong>
+          </p>
+          <button
+            onClick={() => setCancelledAlert(null)}
+            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            Fermer
+          </button>
+        </div>
+      ) : alerts.length === 0 ? (
+        <p className="text-center">Aucune alerte pour l’instant</p>
+      ) : (
+        <ul className="space-y-3">
+          {alerts.map((a) => (
+            <li
+              key={a.id}
+              className="p-3 rounded-lg shadow-sm"
+              style={{ backgroundColor: statusColor(a.status) }}
+            >
+              <h5 className="font-medium">
+                🚨 {a.ownerName || a.fromUid} a signalé : {a.nature || "Panne"}
+              </h5>
+              <p>📍 À {a.distance || "?"} km de vous</p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  onClick={() => setSelectedAlert(a)}
+                >
+                  📍 Voir sur la carte
+                </button>
+                <button
+                  className="px-2 py-1 rounded text-white"
+                  style={{ backgroundColor: a.status ? "#6c757d" : "green" }}
+                  onClick={() => acceptAlert(a)}
+                  disabled={a.status === "accepté" || a.status === "refusé"}
+                >
+                  ✅ Accepter
+                </button>
+                <button
+                  className="px-2 py-1 rounded text-white"
+                  style={{ backgroundColor: a.status ? "#6c757d" : "red" }}
+                  onClick={() => rejectAlert(a)}
+                  disabled={a.status === "accepté" || a.status === "refusé"}
+                >
+                  ❌ Refuser
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  ) : alerts.length === 0 ? (
-    <p>Aucune alerte pour l’instant</p>
-  ) : (
-    <ul className="space-y-3">
-      {alerts.map((a) => (
-        <li
-          key={a.id}
-          className="p-3 rounded-lg shadow-sm"
-          style={{ backgroundColor: statusColor(a.status) }}
-        >
-          <h5 className="font-medium">
-            🚨 {a.ownerName || a.fromUid} a signalé : {a.nature || "Panne"}
-          </h5>
-          <p>📍 À {a.distance || "?"} km de vous</p>
-          <div className="flex gap-2 mt-2">
-            <button
-              className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              onClick={() => setSelectedAlert(a)}
-            >
-              📍 Voir sur la carte
-            </button>
-            <button
-              className="px-2 py-1 rounded text-white"
-              style={{ backgroundColor: a.status ? "#6c757d" : "green" }}
-              onClick={() => acceptAlert(a)}
-              disabled={a.status === "accepté" || a.status === "refusé"}
-            >
-              ✅ Accepter
-            </button>
-            <button
-              className="px-2 py-1 rounded text-white"
-              style={{ backgroundColor: a.status ? "#6c757d" : "red" }}
-              onClick={() => rejectAlert(a)}
-              disabled={a.status === "accepté" || a.status === "refusé"}
-            >
-              ❌ Refuser
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-  );
-}
+  </div>
+);
+
