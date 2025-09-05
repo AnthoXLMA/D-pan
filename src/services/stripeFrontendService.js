@@ -1,6 +1,6 @@
 // const API_URL = "http://localhost:4242/api/stripe";
 // const API_URL = "http://192.168.1.42:4242/api/stripe";
-export const STRIPE_API_URL = "https://2e3db86eac9e.ngrok-free.app";
+export const STRIPE_API_URL = "https://de3a38661832.ngrok-free.app";
 // export const STRIPE_API_URL = "http://192.168.1.42:4242/api/stripe";
 
 export const createStripeAccountForSolidaire = async () => {
