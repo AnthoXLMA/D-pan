@@ -14,6 +14,7 @@ export default function InProgressModal({
   solidaire,
   setPaymentStatus,
   onComplete,
+  onCancel,
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -80,58 +81,70 @@ export default function InProgressModal({
 //   setLoading(false);
 // };
 
+return (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+    <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-11/12 animate-fade-in relative text-center">
+      {/* Titre centré */}
+      <h2 className="text-lg font-bold mb-2">Paiement en cours...</h2>
+      <p className="text-sm text-gray-600 mb-4">Attendez l'alerte avant d'intervenir</p>
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-11/12 animate-fade-in relative">
-        <h2 className="text-lg font-bold mb-4">Dépannage en cours</h2>
+      <p className="mb-2 text-left">
+        <strong>Solidaire :</strong> {solidaire.name}
+      </p>
+      <p className="mb-2 text-left">
+        <strong>Sinistré :</strong> {report.ownerName || report.ownerEmail}
+      </p>
+      <p className="mb-2 text-left">
+        <strong>Montant :</strong> {report.frais} €
+      </p>
+      <p className="mb-2 text-left">
+        <strong>Localisation :</strong> {report.latitude}, {report.longitude}
+      </p>
+      {report.materiel && (
+        <p className="mb-2 text-left">
+          <strong>Matériel :</strong> {report.materiel}
+        </p>
+      )}
 
-        <p className="mb-2">
-          <strong>Solidaire :</strong> {solidaire.name}
+      {!solidaire.stripeAccountId ? (
+        <button
+          onClick={handleCreateStripeAccount}
+          className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-1 mb-4"
+        >
+          Connecter mon compte Stripe pour recevoir le paiement
+        </button>
+      ) : (
+        <p className="text-green-600 font-medium mt-2 mb-4">
+          Votre compte Stripe est prêt. Vous recevrez automatiquement vos gains.
         </p>
-        <p className="mb-2">
-          <strong>Sinistré :</strong> {report.ownerName || report.ownerEmail}
-        </p>
-        <p className="mb-2">
-          <strong>Montant :</strong> {report.frais} €
-        </p>
-        <p className="mb-2">
-          <strong>Localisation :</strong> {report.latitude}, {report.longitude}
-        </p>
-        {report.materiel && (
-          <p className="mb-2">
-            <strong>Matériel :</strong> {report.materiel}
-          </p>
-        )}
+      )}
 
-        {!solidaire.stripeAccountId ? (
-          <button onClick={handleCreateStripeAccount} className="btn-blue w-full">
-            Connecter mon compte Stripe pour recevoir le paiement
-          </button>
-        ) : (
-          <p>Votre compte Stripe est prêt. Vous recevrez automatiquement vos gains.</p>
-        )}
-
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleComplete}
-            disabled={loading}
-            className={`flex-1 px-4 py-2 rounded-lg text-white transition ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            ✅ {loading ? "Libération en cours..." : "Terminer le dépannage"}
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            🔒 Fermer
-          </button>
-        </div>
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={handleComplete}
+          disabled={loading}
+          className={`flex-1 px-4 py-2 rounded-lg text-white transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          ✅ {loading ? "Libération en cours..." : "Terminer le dépannage"}
+        </button>
+        <button
+          onClick={onClose}
+          className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+        >
+          🔒 Fermer
+        </button>
+        <button
+          onClick={() => onCancel(report)}
+          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+        >
+          ❌ Annuler le dépannage
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
 }
