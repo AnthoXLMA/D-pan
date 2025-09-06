@@ -34,6 +34,7 @@ import { updateUserStatus } from "./userService.js";
 import Chat from "./Chat.jsx";
 import ProfileForm from "./ProfileForm.jsx";
 import LanguageSwitcher from "./utils/LanguageSwitcher.jsx";
+import AvisModal from "./utils/AvisModal";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -58,6 +59,19 @@ export default function App() {
   const navigate = useNavigate();
   const isPro = user?.role === "garage" || user?.role === "assurance";
   const isUser = !isPro;
+  const [avisModalOpen, setAvisModalOpen] = useState(false);
+  const [selectedPro, setSelectedPro] = useState(null);
+
+  const openAvisModal = (pro) => {
+    setSelectedPro(pro);
+    setAvisModalOpen(true);
+  };
+
+  const closeAvisModal = () => {
+    setSelectedPro(null);
+    setAvisModalOpen(false);
+  };
+
 
   // Auth
 useEffect(() => {
@@ -140,14 +154,28 @@ useEffect(() => {
   }, [user]);
 
   // Écoute des solidaires
+  // useEffect(() => {
+  //   const unsub = onSnapshot(collection(db, "solidaires"), (snapshot) => {
+  //     const allSolidaires = snapshot.docs.map(doc => doc.data());
+  //     setSolidaires(allSolidaires);
+  //     setOnlineUsers(allSolidaires.filter(s => s.online).length);
+  //   });
+  //   return () => unsub();
+  // }, []);
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "solidaires"), (snapshot) => {
-      const allSolidaires = snapshot.docs.map(doc => doc.data());
-      setSolidaires(allSolidaires);
-      setOnlineUsers(allSolidaires.filter(s => s.online).length);
+  const unsub = onSnapshot(collection(db, "solidaires"), (snapshot) => {
+    const allSolidaires = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        avis: data.avis || [],
+      };
     });
-    return () => unsub();
-  }, []);
+    setSolidaires(allSolidaires);
+    setOnlineUsers(allSolidaires.filter(s => s.online).length);
+  });
+  return () => unsub();
+}, []);
 
   // Écoute des reports
   useEffect(() => {
@@ -342,6 +370,11 @@ useEffect(() => {
           </div>
         )}
 
+        <AvisModal
+          open={avisModalOpen}
+          onClose={closeAvisModal}
+          pro={selectedPro}
+        />
 
         {showProfileForm && <ProfileForm user={user} onClose={() => setShowProfileForm(false)} onUpdate={(updatedUser) => { setUser(updatedUser); setDoc(doc(db, "solidaires", updatedUser.uid), updatedUser, { merge: true }); }} />}
 
