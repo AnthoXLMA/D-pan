@@ -98,6 +98,7 @@ const MapView = forwardRef(({
   const [currentReport, setCurrentReport] = useState(null);
   const [distanceToHelper, setDistanceToHelper] = useState(null);
   const [currentUser, setCurrentUser] = useState(solidaires.find(s => s.uid === currentUserUid) || null);
+  const [selectedPro, setSelectedPro] = useState(null);
 
   // === Fonction pour alerter un helper ===
   const alertHelper = (helper) => {
@@ -119,6 +120,7 @@ const MapView = forwardRef(({
     setAvisModalOpen(false);
   };
 
+
   // Recenter map API
   useImperativeHandle(ref, () => ({
     recenter: () => {
@@ -133,20 +135,27 @@ const MapView = forwardRef(({
     const fetchPros = async () => {
       try {
         const snapshot = await getDocs(collection(db, "users"));
-        const allUsers = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        const filtered = allUsers.filter(
-          (u) =>
-            (u.role === "garage" || u.role === "assurance") &&
-            u.latitude != null &&
-            u.longitude != null
+        const allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const filtered = await Promise.all(
+          allUsers
+            .filter(u => u.role === "garage" || u.role === "assurance")
+            .filter(u => u.latitude != null && u.longitude != null) // garde la vérification de lat/lng
+            .map(async (u) => {
+              const avisSnap = await getDocs(collection(db, `users/${u.id}/avis`));
+              const avis = avisSnap.docs.map(d => d.data());
+              return { ...u, avis };
+            })
         );
+
         setPros(filtered);
-      } catch (error) {
-        console.error("❌ Erreur Firestore:", error);
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchPros();
   }, []);
+
 
   // Suivi temps réel du report actif
   useEffect(() => {
@@ -337,17 +346,137 @@ const MapView = forwardRef(({
           return (
             <Marker key={s.uid} position={[s.latitude, s.longitude]} icon={getSolidaireIconWithBadge(status, alertCount)}>
               <Popup>
-                <strong>👤 {s.name}</strong> <br />
-                Matériel : {Array.isArray(s.materiel) ? s.materiel.join(", ") : s.materiel || "Non spécifié"} <br />
-                📏 Distance : {distance} km <br />
-                {status === "available" && "✅ Disponible"}
-                {status === "offline" && "⚪ Indisponible"}
-                {status === "alerted" && "⏳ En attente de réponse"}
-                {status === "busy" && "⏳ Aide en cours"}
-                {status === "available" && s.uid !== currentUserUid && (
-                  <button onClick={() => { onAlertUser(s); toast.info(`⚡ Alerte envoyée à ${s.name}`); }}>⚡ Alerter</button>
-                )}
-              </Popup>
+  <div style={{ fontFamily: "sans-serif", minWidth: "200px" }}>
+    {/* Nom */}
+    <div style={{ fontWeight: "bold", fontSize: "1rem", marginBottom: "4px" }}>
+      👤 {s.name}
+    </div>
+
+    {/* Matériel */}
+    <div style={{ fontSize: "0.9rem", color: "#444" }}>
+      🛠️ Matériel :{" "}
+      {Array.isArray(s.materiel)
+        ? s.materiel.join(", ")
+        : s.materiel || "Non spécifié"}
+    </div>
+
+    {/* Distance */}
+    <div style={{ fontSize: "0.9rem", color: "#444" }}>
+      📏 {distance} km
+    </div>
+
+    {/* Statut avec badge */}
+    <div style={{ margin: "6px 0" }}>
+      {status === "available" && (
+        <span
+          style={{
+            background: "#d1fae5",
+            color: "#065f46",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            fontSize: "0.8rem",
+            fontWeight: "500",
+          }}
+        >
+          ✅ Disponible
+        </span>
+      )}
+      {status === "offline" && (
+        <span
+          style={{
+            background: "#f3f4f6",
+            color: "#374151",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            fontSize: "0.8rem",
+            fontWeight: "500",
+          }}
+        >
+          ⚪ Indisponible
+        </span>
+      )}
+      {status === "alerted" && (
+        <span
+          style={{
+            background: "#fef3c7",
+            color: "#92400e",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            fontSize: "0.8rem",
+            fontWeight: "500",
+          }}
+        >
+          ⏳ En attente
+        </span>
+      )}
+      {status === "busy" && (
+        <span
+          style={{
+            background: "#fee2e2",
+            color: "#991b1b",
+            padding: "2px 8px",
+            borderRadius: "999px",
+            fontSize: "0.8rem",
+            fontWeight: "500",
+          }}
+        >
+          🔴 Aide en cours
+        </span>
+      )}
+    </div>
+
+    {/* Actions */}
+    {status === "available" && s.uid !== currentUserUid && (
+      <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            onAlertUser(s);
+            toast.info(`⚡ Alerte envoyée à ${s.name}`);
+          }}
+          style={{
+            background: "#2563eb",
+            color: "white",
+            padding: "6px 12px",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+          }}
+        >
+          ⚡ Alerter
+        </button>
+
+        {Array.isArray(s.avis) && s.avis.length > 0 ? (
+          <button
+            onClick={() => openAvisModal(s)}
+            style={{
+              background: "#f59e0b",
+              color: "white",
+              padding: "6px 12px",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+            }}
+          >
+            ⭐ Lire les avis ({s.avis.length})
+          </button>
+        ) : (
+          <span
+            style={{
+              fontSize: "0.8rem",
+              color: "gray",
+              alignSelf: "center",
+            }}
+          >
+            Aucun avis
+          </span>
+        )}
+      </div>
+    )}
+  </div>
+</Popup>
+
             </Marker>
           );
         })}
@@ -372,13 +501,25 @@ const MapView = forwardRef(({
                 {pro.company?.siret && <>SIRET : {pro.company.siret} <br /></>}
                 {pro.company?.address && <>Adresse : {pro.company.address} <br /></>}
                 {Array.isArray(pro.materiel) && pro.materiel.length > 0 && <>Matériel : {pro.materiel.join(", ")} <br /></>}
+
+                {/* Affichage du rating seulement si il y a des avis */}
                 {pro.avis && pro.avis.length > 0 && (
                   <>
-                    <Rating name={`rating-${pro.id}`} value={moyenneAvis} readOnly precision={0.5} size="small" /> ({pro.avis.length} avis)
+                    <Rating
+                      name={`rating-${pro.id}`}
+                      value={moyenneAvis || 0}
+                      readOnly
+                      precision={0.5}
+                      size="small"
+                    /> ({pro.avis?.length || 0} avis)
                     <br />
-                    <Button size="small" onClick={() => openAvisModal(pro)}>Lire les avis</Button>
                   </>
                 )}
+
+                {/* Toujours afficher le bouton */}
+                <Button size="small" onClick={() => openAvisModal(pro)}>
+                  {pro.avis?.length ? "Lire les avis" : "Aucun avis pour le moment"}
+                </Button>
               </Popup>
             </Marker>
           );
