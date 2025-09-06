@@ -69,7 +69,25 @@ export default function Auth({ setUser }) {
     }
   };
 
+  // === Fonction utilitaire pour géocoder une adresse ===
+  async function getLatLngFromAddress(address) {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+      );
+      const data = await response.json();
+      if (data.length > 0) {
+        return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+      }
+    } catch (error) {
+      console.error("Erreur géocodage:", error);
+    }
+    return { latitude: null, longitude: null };
+  }
+
+
   const handleSignup = async () => {
+
     if (!username) {
       setSnackbar({ open: true, message: "Veuillez saisir un nom d'utilisateur.", severity: "warning" });
       return;
@@ -103,8 +121,11 @@ export default function Auth({ setUser }) {
         userData.role = "automobiliste_equipe"; // rôle identique pour tous les utilisateurs simples
         userData.materiel = materiel || []; // tableau vide si pas de matériel sélectionné
       } else if (userType === "pro") {
-        userData.role = role === "garage" ? "professionnel_expert_certifie" : "assurance";
+        userData.role = role === "garage" ? "garage" : "assurance";
         userData.company = { name: companyName, siret, address };
+        const { latitude, longitude } = await getLatLngFromAddress(address);
+        userData.latitude = latitude;
+        userData.longitude = longitude;
         userData.materiel = [];
       }
 

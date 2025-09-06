@@ -55,12 +55,9 @@ export default function App() {
   const [showHelperList, setShowHelperList] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileForm, setShowProfileForm] = useState(false);
-
   const navigate = useNavigate();
-
   const isPro = user?.role === "garage" || user?.role === "assurance";
   const isUser = !isPro;
-
 
   // Auth
 useEffect(() => {

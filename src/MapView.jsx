@@ -12,6 +12,7 @@ import InProgressModal from "./InProgressModal.jsx";
 import { getDistanceKm } from "./utils/distance.js";
 import ModalHelperList from "./ModalHelperList.jsx";
 import { MATERIEL_OPTIONS } from "./constants/materiel.js";
+import { collection, getDocs } from "firebase/firestore";  // ✅ ajoute ça
 
 
 // === Icônes ===
@@ -54,7 +55,6 @@ const getSolidaireIconWithBadge = (status, pendingAlertsCount) => {
   });
 };
 
-
 // === Utilitaire distance (Haversine) ===
 // function getDistanceKm(lat1, lon1, lat2, lon2) {
 //   const R = 6371;
@@ -85,7 +85,7 @@ const alertHelper = (helper) => {
 function SetViewOnUser({ position }) {
   const map = useMap();
   useEffect(() => {
-    if (position) map.setView(position, 15);
+    if (position) map.setView(position, 25);
   }, [position, map]);
   return null;
 }
@@ -234,9 +234,65 @@ const filteredSolidaires = activeReport
     })
   : solidaires;
 
-
-
   const availableHelpers = filteredSolidaires.slice(0, 10); // les 10 premiers helpers, sans filtre
+
+// === Pro Markers (garages et assurances Firestore) ===
+function ProMarkers() {
+  const [pros, setPros] = useState([]);
+
+  useEffect(() => {
+    const fetchPros = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "users"));
+        const allUsers = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        // 👉 on garde seulement garages et assurances avec coordonnées valides
+        const filtered = allUsers.filter(
+          (u) =>
+            (u.role === "garage" || u.role === "assurance") &&
+            u.latitude != null &&
+            u.longitude != null
+        );
+
+        setPros(filtered);
+        console.log("✅ Pros Firestore:", filtered);
+      } catch (error) {
+        console.error("❌ Erreur Firestore:", error);
+      }
+    };
+
+    fetchPros();
+  }, []);
+
+  return (
+    <>
+      {pros.map((pro) => {
+        const proIcon = new L.Icon({
+          iconUrl:
+            pro.role === "garage"
+              ? "https://img.icons8.com/color/48/000000/garage.png"
+              : "https://img.icons8.com/color/48/000000/bank-building.png",
+          iconSize: [40, 40],
+        });
+
+        return (
+          <Marker key={pro.id} position={[pro.latitude, pro.longitude]} icon={proIcon}>
+            <Popup>
+              <strong>{pro.role === "garage" ? "🚗 Garage" : "🏢 Assurance"} :</strong>{" "}
+              {pro.company?.name || pro.username} <br />
+              {pro.company?.siret && <>SIRET : {pro.company.siret} <br /></>}
+              {pro.company?.address && <>Adresse : {pro.company.address} <br /></>}
+              {Array.isArray(pro.materiel) &&
+                pro.materiel.length > 0 &&
+                <>Matériel : {pro.materiel.join(", ")} <br /></>}
+            </Popup>
+          </Marker>
+        );
+      })}
+    </>
+  );
+}
+
 
 // Bandeau helper confirmé uniquement
   function HelperBanner({ activeReport, solidaires, userPosition }) {
@@ -361,7 +417,9 @@ const filteredSolidaires = activeReport
         ))}
 
         {/* Solidaires */}
-        {filteredSolidaires.map((s) => {
+        {filteredSolidaires
+          .filter(s => s.latitude != null && s.longitude != null)
+          .map((s) => {
           let status = "available";
           const isOffline = !s.online;
           const alertForSolidaire = activeReport
@@ -407,11 +465,81 @@ const filteredSolidaires = activeReport
             </Marker>
           );
         })}
+
+  <SetViewOnUser position={userPosition} />
+  {alertLocation && <FlyToLocation alert={alertLocation} />}
+  {activeReport?.helperConfirmed && activeReport.helperUid && (
+    <HelperBanner activeReport={activeReport} solidaires={solidaires} userPosition={userPosition} />
+  )}
+
+  {/* 🔥 Pros */}
+  <ProMarkers />
+
+  {/* Utilisateur */}
+  <Marker position={userPosition} icon={currentUserIcon}>
+    <Popup>🙋‍♂️ Vous êtes ici</Popup>
+  </Marker>
+
       </MapContainer>
     </>
   );
 });
-
-console.log({ PaymentBanner, AcceptModal, InProgressModal });
-
 export default MapView;
+
+//---------------PRO MARKERS-----------------------//
+// export default function ProMarkers({ userPosition }) {
+//   const [pros, setPros] = useState([]);
+
+//   useEffect(() => {
+//     const fetchPros = async () => {
+//       try {
+//         const snapshot = await getDocs(collection(db, "users"));
+//         const users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+//         // 👉 garde seulement garages + assurances avec coordonnées valides
+//         const filtered = users.filter(
+//           (u) =>
+//             (u.role === "garage" || u.role === "assurance") &&
+//             u.latitude != null &&
+//             u.longitude != null
+//         );
+
+//         setPros(filtered);
+//         console.log("Pros Firestore:", filtered);
+//       } catch (error) {
+//         console.error("Erreur récupération pros:", error);
+//       }
+//     };
+
+//     fetchPros();
+//   }, []);
+
+//   return (
+//     <>
+//       {pros.map((pro) => {
+//         const proIcon = new L.Icon({
+//           iconUrl:
+//             pro.role === "garage"
+//               ? "https://img.icons8.com/color/48/000000/garage.png"
+//               : "https://img.icons8.com/color/48/000000/bank-building.png",
+//           iconSize: [40, 40],
+//         });
+
+//         return (
+//           <Marker key={pro.id} position={[pro.latitude, pro.longitude]} icon={proIcon}>
+//             <Popup>
+//               <strong>{pro.role === "garage" ? "🚗 Garage" : "🏢 Assurance"} :</strong>{" "}
+//               {pro.company?.name || pro.username} <br />
+//               {pro.company?.siret && <>SIRET : {pro.company.siret} <br /></>}
+//               {pro.company?.address && <>Adresse : {pro.company.address} <br /></>}
+//               {Array.isArray(pro.materiel) &&
+//                 pro.materiel.length > 0 &&
+//                 <>Matériel : {pro.materiel.join(", ")} <br /></>}
+//             </Popup>
+//           </Marker>
+//         );
+//       })}
+//     </>
+//   );
+// }
+

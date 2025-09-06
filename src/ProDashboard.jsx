@@ -12,10 +12,10 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Stack,
 } from "@mui/material";
-import { AiOutlineCar, AiOutlineTool, AiOutlineDollarCircle } from "react-icons/ai";
+import { AiOutlineCar, AiOutlineTool, AiOutlineDollarCircle, AiOutlineCheckCircle } from "react-icons/ai";
 
-// Définition des statuts
 const getStatusColor = (status) => {
   switch (status) {
     case "en attente":
@@ -31,7 +31,6 @@ const getStatusColor = (status) => {
 
 export default function ProDashboard({ user }) {
   const [userData, setUserData] = useState(null);
-  const [myReports, setMyReports] = useState([]);
   const [assignedReports, setAssignedReports] = useState([]);
   const [payments, setPayments] = useState([]);
 
@@ -44,16 +43,10 @@ export default function ProDashboard({ user }) {
       if (docSnap.exists()) setUserData(docSnap.data());
     };
 
-    const fetchReports = async () => {
-      // Reports créés par le pro (si applicable)
-      const q1 = query(collection(db, "reports"), where("ownerUid", "==", user.uid));
-      const snapshot1 = await getDocs(q1);
-      setMyReports(snapshot1.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-
-      // Reports assignés au pro
-      const q2 = query(collection(db, "reports"), where("helperUid", "==", user.uid));
-      const snapshot2 = await getDocs(q2);
-      setAssignedReports(snapshot2.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    const fetchAssignedReports = async () => {
+      const q = query(collection(db, "reports"), where("helperUid", "==", user.uid));
+      const snapshot = await getDocs(q);
+      setAssignedReports(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     };
 
     const fetchPayments = async () => {
@@ -63,7 +56,7 @@ export default function ProDashboard({ user }) {
     };
 
     fetchUserData();
-    fetchReports();
+    fetchAssignedReports();
     fetchPayments();
   }, [user]);
 
@@ -73,31 +66,68 @@ export default function ProDashboard({ user }) {
   const isAssurance = userData.role === "assurance";
 
   return (
-    <Box
-      sx={{
-        p: 4,
-        bgcolor: "#007bff", // bleu
-        minHeight: "100vh",
-        color: "#fff", // texte blanc pour contraster
-      }}
-    >
-
-      <Typography variant="h4" gutterBottom color="primary">
-        Espace Professionnel, {userData.username || userData.company?.name} !
+    <Box sx={{ p: 4, bgcolor: "#f5f6fa", minHeight: "100vh" }}>
+      <Typography variant="h4" gutterBottom color="textPrimary" sx={{ mb: 4 }}>
+        Bienvenue, {userData.username || userData.company?.name} !
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Profil */}
+        {/* KPI Cards */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ height: "100%", bgcolor: "white", border: "1px solid #e0e0e0" }}>
+          <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
             <CardContent>
-              <Typography
-                variant="h6"
-                sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                color="primary"
-              >
-                <AiOutlineCar style={{ marginRight: 8 }} /> Profil
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <AiOutlineTool size={28} color="#3f51b5" />
+                <Typography variant="h6">Interventions Assignées</Typography>
+              </Stack>
+              <Typography variant="h3" color="primary">{assignedReports.length}</Typography>
+              <Typography variant="body2" color="textSecondary">
+                Total interventions actives
               </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <AiOutlineDollarCircle size={28} color="#4caf50" />
+                <Typography variant="h6">Paiements Reçus</Typography>
+              </Stack>
+              <Typography variant="h3" color="primary">{payments.length}</Typography>
+              <Typography variant="body2" color="textSecondary">
+                Total transactions enregistrées
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <AiOutlineCheckCircle size={28} color="#ff9800" />
+                <Typography variant="h6">Interventions Terminées</Typography>
+              </Stack>
+              <Typography variant="h3" color="primary">
+                {assignedReports.filter(r => r.status === "terminé").length}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Total interventions terminées
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Profil / Informations */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: 4, height: "100%" }}>
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <AiOutlineCar size={28} color="#2196f3" />
+                <Typography variant="h6">Profil</Typography>
+              </Stack>
               <Divider sx={{ mb: 2 }} />
               {isGarage && (
                 <>
@@ -116,7 +146,7 @@ export default function ProDashboard({ user }) {
               )}
               <Typography sx={{ mt: 2, fontWeight: "bold" }}>Matériel :</Typography>
               <List dense>
-                {userData.materiel && userData.materiel.length > 0 ? (
+                {userData.materiel?.length > 0 ? (
                   userData.materiel.map((m) => (
                     <ListItem key={m}>
                       <ListItemText primary={m} />
@@ -130,101 +160,33 @@ export default function ProDashboard({ user }) {
           </Card>
         </Grid>
 
-        {/* Reports assignés (différents pour Garage / Assurance) */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: "100%", bgcolor: "white", border: "1px solid #e0e0e0" }}>
+        {/* Liste interventions assignées */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: 4, height: "100%" }}>
             <CardContent>
-              <Typography
-                variant="h6"
-                sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                color="primary"
-              >
-                <AiOutlineTool style={{ marginRight: 8 }} /> Pannes Assignées
-              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <AiOutlineTool size={28} color="#3f51b5" />
+                <Typography variant="h6">Liste Interventions</Typography>
+              </Stack>
               <Divider sx={{ mb: 2 }} />
-              <Typography variant="h3" color="secondary">
-                {assignedReports.length}
-              </Typography>
-              <List dense>
-                {assignedReports.length === 0 && (
-                  <Typography variant="body2">Aucune intervention assignée.</Typography>
-                )}
-                {assignedReports.map((r) => (
-                  <ListItem key={r.id} divider>
-                    <ListItemText
-                      primary={`#${r.id} - ${r.nature || "Inconnue"}`}
-                      secondary={`Statut:`}
-                    />
-                    <Chip label={r.status} color={getStatusColor(r.status)} size="small" />
-                  </ListItem>
-                ))}
-              </List>
+              {assignedReports.length === 0 ? (
+                <Typography variant="body2">Aucune intervention assignée.</Typography>
+              ) : (
+                <List dense>
+                  {assignedReports.map(r => (
+                    <ListItem key={r.id} divider>
+                      <ListItemText
+                        primary={`#${r.id} - ${r.nature || "Inconnue"}`}
+                        secondary={`Statut:`}
+                      />
+                      <Chip label={r.status} color={getStatusColor(r.status)} size="small" />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
             </CardContent>
           </Card>
         </Grid>
-
-        {/* Paiements (affiché pour tous les pros) */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: "100%", bgcolor: "white", border: "1px solid #e0e0e0" }}>
-            <CardContent>
-              <Typography
-                variant="h6"
-                sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                color="primary"
-              >
-                <AiOutlineDollarCircle style={{ marginRight: 8 }} /> Paiements & Versements ({payments.length})
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List dense>
-                {payments.length === 0 && (
-                  <Typography variant="body2">Aucun paiement enregistré.</Typography>
-                )}
-                {payments.map((p) => (
-                  <ListItem key={p.id} divider>
-                    <ListItemText
-                      primary={`#${p.id} - ${p.type} : ${p.amount || 0} €`}
-                      secondary={`Statut: ${p.status || "En attente"} | Date: ${
-                        p.timestamp?.toDate().toLocaleString() || "Inconnue"
-                      }`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Section spécifique Garage */}
-        {isGarage && (
-          <Grid item xs={12}>
-            <Card sx={{ bgcolor: "white", border: "1px solid #e0e0e0" }}>
-              <CardContent>
-                <Typography variant="h6" color="primary" sx={{ display: "flex", alignItems: "center" }}>
-                  <AiOutlineTool style={{ marginRight: 8 }} /> Statistiques Garage
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography>Total interventions réalisées : {assignedReports.length}</Typography>
-                {/* Ajoute ici d’autres KPIs spécifiques garage */}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Section spécifique Assurance */}
-        {isAssurance && (
-          <Grid item xs={12}>
-            <Card sx={{ bgcolor: "white", border: "1px solid #e0e0e0" }}>
-              <CardContent>
-                <Typography variant="h6" color="primary" sx={{ display: "flex", alignItems: "center" }}>
-                  <AiOutlineTool style={{ marginRight: 8 }} /> Statistiques Assurance
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography>Total sinistres gérés : {assignedReports.length}</Typography>
-                {/* Ajoute ici d’autres KPIs spécifiques assurance */}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
       </Grid>
     </Box>
   );
