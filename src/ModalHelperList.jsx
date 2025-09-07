@@ -1,26 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { getDistanceKm } from "./utils/distance";
 
-export default function ModalHelperList({ helpers, onClose, userPosition, onAlert, activeReport }) {
+export default function ModalHelperList({
+  helpers,
+  onClose,
+  userPosition,
+  onAlert,
+  activeReport,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!helpers || helpers.length === 0) return null;
+  // Toujours calculer sortedHelpers avec useMemo
+  const sortedHelpers = useMemo(() => {
+    if (!helpers || helpers.length === 0) return [];
 
-  const currentHelper = helpers[currentIndex];
-  const distance = getDistanceKm(
+    return [...helpers].sort((a, b) => {
+      if (a.online && !b.online) return -1;
+      if (!a.online && b.online) return 1;
+
+      const distanceA = getDistanceKm(
+        userPosition[0],
+        userPosition[1],
+        a.latitude,
+        a.longitude
+      );
+      const distanceB = getDistanceKm(
+        userPosition[0],
+        userPosition[1],
+        b.latitude,
+        b.longitude
+      );
+
+      return distanceA - distanceB;
+    });
+  }, [helpers, userPosition]);
+
+  if (sortedHelpers.length === 0) return null;
+
+  const currentHelper = sortedHelpers[currentIndex];
+  const rawDistance = getDistanceKm(
     userPosition[0],
     userPosition[1],
     currentHelper.latitude,
     currentHelper.longitude
   );
 
+  // Si ce n’est pas un nombre, on met 0 par défaut
+  const distance = Number(rawDistance) || 0;
+
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? helpers.length - 1 : prev - 1));
+    setCurrentIndex((prev) =>
+      prev === 0 ? sortedHelpers.length - 1 : prev - 1
+    );
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === helpers.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) =>
+      prev === sortedHelpers.length - 1 ? 0 : prev + 1
+    );
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -37,30 +76,63 @@ export default function ModalHelperList({ helpers, onClose, userPosition, onAler
           </button>
 
           {/* Carte du helper */}
-          <div className="flex-1 mx-4 p-4 border rounded-2xl shadow flex flex-col items-center
-                          h-[250px] w-full max-w-xs overflow-y-auto">
-            <div className="flex items-center space-x-2">
-              <div className={`h-3 w-3 rounded-full ${currentHelper.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-              <div className="font-medium text-lg text-center">{currentHelper.name}</div>
-              <span className={`ml-2 text-sm ${currentHelper.online ? 'text-green-600' : 'text-gray-500'}`}>
-                {currentHelper.online ? 'En ligne' : 'Hors ligne'}
-              </span>
+            <div className="flex-1 mx-4 p-4 border rounded-2xl shadow flex flex-col items-center
+                            h-[250px] w-full max-w-xs overflow-y-auto">
+
+              {/* Nom + statut */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center space-x-2">
+                  <div
+                    className={`h-3 w-3 rounded-full ${
+                      currentHelper.online ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  />
+                  <div className="font-medium text-lg text-center">
+                    {currentHelper.name}
+                  </div>
+                </div>
+                <span
+                  className={`text-sm mt-1 ${
+                    currentHelper.online ? "text-green-600" : "text-gray-500"
+                  }`}
+                >
+                  {currentHelper.online ? "En ligne" : "Hors ligne"}
+                </span>
+              </div>
+
+
+              {/* Matériel */}
+              <div className="text-sm text-gray-500 text-center mt-2">
+                {currentHelper.role === "garage" || currentHelper.role === "assurance"
+                  ? "🏢 Professionnel"
+                  : `Matériel: ${Array.isArray(currentHelper.materiel) ? currentHelper.materiel.join(", ") : currentHelper.materiel || "N/A"}`}
+              </div>
+              {/* Distance */}
+              <div className="text-sm text-gray-400 mt-1 text-center">
+                Distance: {distance.toFixed(1)} km
+              </div>
+
+              {/* Bouton alerter */}
+              <button
+                onClick={() => onAlert(currentHelper)}
+                className={`mt-auto px-3 py-1 rounded-lg text-white ${
+                  currentHelper.online && activeReport
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+                disabled={!activeReport || !currentHelper.online}
+                title={
+                  !activeReport
+                    ? "Vous devez avoir un signalement actif"
+                    : !currentHelper.online
+                    ? "Utilisateur hors ligne"
+                    : ""
+                }
+              >
+                ⚡ Alerter
+              </button>
             </div>
 
-            <div className="text-sm text-gray-500 text-center mt-2">
-              Matériel: {Array.isArray(currentHelper.materiel) ? currentHelper.materiel.join(", ") : currentHelper.materiel || "N/A"}
-            </div>
-            <div className="text-sm text-gray-400 mt-1 text-center">Distance: {distance} km</div>
-
-            <button
-              onClick={() => onAlert(currentHelper)}
-              className={`mt-auto px-3 py-1 rounded-lg text-white ${currentHelper.online && activeReport ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-              disabled={!activeReport || !currentHelper.online}
-              title={!activeReport ? "Vous devez avoir un signalement actif" : !currentHelper.online ? "Utilisateur hors ligne" : ""}
-            >
-              ⚡ Alerter
-            </button>
-          </div>
 
           {/* Flèche droite */}
           <button
