@@ -235,7 +235,23 @@ const MapView = forwardRef(({
       })
     : solidaires;
 
-  const availableHelpers = filteredSolidaires.slice(0, 10);
+  // Transforme les pros en même format que les solidaires
+  const formattedPros = pros.map((pro) => ({
+    uid: pro.id,
+    name: pro.company?.name || pro.username,
+    online: true, // On considère qu’un pro est toujours "online" pour pouvoir l’alerter
+    latitude: pro.latitude,
+    longitude: pro.longitude,
+    materiel: pro.materiel || [],
+    role: pro.role,
+    avis: pro.avis || [],
+  }));
+
+  // Combiner solidaires et pros
+  const availableHelpersIncludingPros = [...filteredSolidaires, ...formattedPros]
+    .filter(h => h.latitude != null && h.longitude != null) // ignore ceux sans coords
+    .slice(0, 10); // Limite à 10 max pour le modal
+
   const canPay = activeReport?.helperConfirmed && activeReport?.status === "aide en cours" && activeReport?.frais > 0;
 
   function HelperBanner({ activeReport, solidaires, userPosition }) {
@@ -290,17 +306,18 @@ const MapView = forwardRef(({
       />
       {showHelperList && (
         <ModalHelperList
-          helpers={availableHelpers}
+          helpers={availableHelpersIncludingPros}
           userPosition={userPosition}
           activeReport={activeReport}
           onAlert={(helper) => {
-            if (!activeReport) return toast.error("Vous devez avoir un signalement actif pour alerter un solidaire !");
+            if (!activeReport) return toast.error("Vous devez avoir un signalement actif !");
             alertHelper(helper);
             setShowHelperList(false);
           }}
           onClose={() => setShowHelperList(false)}
         />
       )}
+
 
       {/* Map */}
       <MapContainer center={userPosition} zoom={13} style={{ height: "100%", width: "100%", zIndex: 0 }} ref={mapRef} scrollWheelZoom>
@@ -346,136 +363,135 @@ const MapView = forwardRef(({
           return (
             <Marker key={s.uid} position={[s.latitude, s.longitude]} icon={getSolidaireIconWithBadge(status, alertCount)}>
               <Popup>
-  <div style={{ fontFamily: "sans-serif", minWidth: "200px" }}>
-    {/* Nom */}
-    <div style={{ fontWeight: "bold", fontSize: "1rem", marginBottom: "4px" }}>
-      👤 {s.name}
-    </div>
+                <div style={{ fontFamily: "sans-serif", minWidth: "200px" }}>
+                  {/* Nom */}
+                  <div style={{ fontWeight: "bold", fontSize: "1rem", marginBottom: "4px" }}>
+                    👤 {s.name}
+                  </div>
+                  {/* Matériel */}
+                  <div style={{ fontSize: "0.9rem", color: "#444" }}>
+                    🛠️ Matériel :{" "}
+                    {Array.isArray(s.materiel)
+                      ? s.materiel.join(", ")
+                      : s.materiel || "Non spécifié"}
+                  </div>
 
-    {/* Matériel */}
-    <div style={{ fontSize: "0.9rem", color: "#444" }}>
-      🛠️ Matériel :{" "}
-      {Array.isArray(s.materiel)
-        ? s.materiel.join(", ")
-        : s.materiel || "Non spécifié"}
-    </div>
+                  {/* Distance */}
+                  <div style={{ fontSize: "0.9rem", color: "#444" }}>
+                    📏 {distance} km
+                  </div>
 
-    {/* Distance */}
-    <div style={{ fontSize: "0.9rem", color: "#444" }}>
-      📏 {distance} km
-    </div>
+                  {/* Statut avec badge */}
+                  <div style={{ margin: "6px 0" }}>
+                    {status === "available" && (
+                      <span
+                        style={{
+                          background: "#d1fae5",
+                          color: "#065f46",
+                          padding: "2px 8px",
+                          borderRadius: "999px",
+                          fontSize: "0.8rem",
+                          fontWeight: "500",
+                        }}
+                      >
+                        ✅ Disponible
+                      </span>
+                    )}
+                    {status === "offline" && (
+                      <span
+                        style={{
+                          background: "#f3f4f6",
+                          color: "#374151",
+                          padding: "2px 8px",
+                          borderRadius: "999px",
+                          fontSize: "0.8rem",
+                          fontWeight: "500",
+                        }}
+                      >
+                        ⚪ Indisponible
+                      </span>
+                    )}
+                    {status === "alerted" && (
+                      <span
+                        style={{
+                          background: "#fef3c7",
+                          color: "#92400e",
+                          padding: "2px 8px",
+                          borderRadius: "999px",
+                          fontSize: "0.8rem",
+                          fontWeight: "500",
+                        }}
+                      >
+                        ⏳ En attente
+                      </span>
+                    )}
+                    {status === "busy" && (
+                      <span
+                        style={{
+                          background: "#fee2e2",
+                          color: "#991b1b",
+                          padding: "2px 8px",
+                          borderRadius: "999px",
+                          fontSize: "0.8rem",
+                          fontWeight: "500",
+                        }}
+                      >
+                        🔴 Aide en cours
+                      </span>
+                    )}
+                  </div>
 
-    {/* Statut avec badge */}
-    <div style={{ margin: "6px 0" }}>
-      {status === "available" && (
-        <span
-          style={{
-            background: "#d1fae5",
-            color: "#065f46",
-            padding: "2px 8px",
-            borderRadius: "999px",
-            fontSize: "0.8rem",
-            fontWeight: "500",
-          }}
-        >
-          ✅ Disponible
-        </span>
-      )}
-      {status === "offline" && (
-        <span
-          style={{
-            background: "#f3f4f6",
-            color: "#374151",
-            padding: "2px 8px",
-            borderRadius: "999px",
-            fontSize: "0.8rem",
-            fontWeight: "500",
-          }}
-        >
-          ⚪ Indisponible
-        </span>
-      )}
-      {status === "alerted" && (
-        <span
-          style={{
-            background: "#fef3c7",
-            color: "#92400e",
-            padding: "2px 8px",
-            borderRadius: "999px",
-            fontSize: "0.8rem",
-            fontWeight: "500",
-          }}
-        >
-          ⏳ En attente
-        </span>
-      )}
-      {status === "busy" && (
-        <span
-          style={{
-            background: "#fee2e2",
-            color: "#991b1b",
-            padding: "2px 8px",
-            borderRadius: "999px",
-            fontSize: "0.8rem",
-            fontWeight: "500",
-          }}
-        >
-          🔴 Aide en cours
-        </span>
-      )}
-    </div>
+                  {/* Actions */}
+                  {status === "available" && s.uid !== currentUserUid && (
+                    <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      <button
+                        onClick={() => {
+                          onAlertUser(s);
+                          toast.info(`⚡ Alerte envoyée à ${s.name}`);
+                        }}
+                        style={{
+                          background: "#2563eb",
+                          color: "white",
+                          padding: "6px 12px",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ⚡ Alerter
+                      </button>
 
-    {/* Actions */}
-    {status === "available" && s.uid !== currentUserUid && (
-      <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
-        <button
-          onClick={() => {
-            onAlertUser(s);
-            toast.info(`⚡ Alerte envoyée à ${s.name}`);
-          }}
-          style={{
-            background: "#2563eb",
-            color: "white",
-            padding: "6px 12px",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "0.85rem",
-            cursor: "pointer",
-          }}
-        >
-          ⚡ Alerter
-        </button>
-
-        {Array.isArray(s.avis) && s.avis.length > 0 ? (
-          <button
-            onClick={() => openAvisModal(s)}
-            style={{
-              background: "#f59e0b",
-              color: "white",
-              padding: "6px 12px",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "0.85rem",
-              cursor: "pointer",
-            }}
-          >
-            ⭐ Lire les avis ({s.avis.length})
-          </button>
-        ) : (
-          <span
-            style={{
-              fontSize: "0.8rem",
-              color: "gray",
-              alignSelf: "center",
-            }}
-          >
-            Aucun avis
-          </span>
-        )}
-      </div>
-    )}
-  </div>
-</Popup>
+                      {Array.isArray(s.avis) && s.avis.length > 0 ? (
+                        <button
+                          onClick={() => openAvisModal(s)}
+                          style={{
+                            background: "#f59e0b",
+                            color: "white",
+                            padding: "6px 12px",
+                            border: "none",
+                            borderRadius: "8px",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ⭐ Lire les avis ({s.avis.length})
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "gray",
+                            alignSelf: "center",
+                          }}
+                        >
+                          Aucun avis
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Popup>
 
             </Marker>
           );
